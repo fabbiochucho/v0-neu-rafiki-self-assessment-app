@@ -111,16 +111,27 @@ export function AssessmentQuestions({ assessment, questions, existingResponses }
         },
       )
 
-      if (error) throw error
+      if (error) {
+        console.error("[v0] Error saving response:", error)
+        throw error
+      }
+      console.log("[v0] Response saved successfully for question:", questionId)
     } catch (error) {
       console.error("Error saving response:", error)
+      throw error
     }
   }
 
   const handleNext = async () => {
     if (currentQuestion && responses[currentQuestion.id]) {
       setIsSaving(true)
-      await saveResponse(currentQuestion.id, responses[currentQuestion.id])
+      try {
+        await saveResponse(currentQuestion.id, responses[currentQuestion.id])
+      } catch (error) {
+        setError(error instanceof Error ? error.message : "Failed to save response")
+        setIsSaving(false)
+        return
+      }
       setIsSaving(false)
     }
 
@@ -195,14 +206,19 @@ export function AssessmentQuestions({ assessment, questions, existingResponses }
       if (percentage >= 70) riskLevel = "high"
       else if (percentage >= 40) riskLevel = "moderate"
 
-      await supabase.from("assessment_results").insert({
-        assessment_id: assessment.id,
-        domain_name: domainName,
-        total_score: scores.total,
-        max_possible_score: scores.max,
-        percentage_score: percentage,
-        risk_level: riskLevel,
-      })
+      await supabase.from("assessment_results").upsert(
+        {
+          assessment_id: assessment.id,
+          domain_name: domainName,
+          total_score: scores.total,
+          max_possible_score: scores.max,
+          percentage_score: percentage,
+          risk_level: riskLevel,
+        },
+        {
+          onConflict: "assessment_id,domain_name",
+        },
+      )
     }
   }
 
