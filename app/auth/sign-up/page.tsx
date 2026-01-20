@@ -27,7 +27,6 @@ export default function SignUpPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
@@ -44,23 +43,46 @@ export default function SignUpPage() {
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
-          data: {
+      const supabase = createClient()
+      
+      // Store user metadata in localStorage temporarily before sign-up
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          "pending_user_data",
+          JSON.stringify({
             full_name: fullName,
             account_type: accountType,
             organization_name: organizationName,
             country: country,
-          },
+          })
+        )
+      }
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo:
+            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
+            `${window.location.origin}/dashboard`,
         },
       })
+
       if (error) throw error
       router.push("/auth/sign-up-success")
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+      console.error("[v0] Sign-up error:", error)
+      if (error instanceof Error) {
+        if (error.message.includes("Failed to fetch")) {
+          setError(
+            "Network error. Please check your connection and try again."
+          )
+        } else {
+          setError(error.message)
+        }
+      } else {
+        setError("An error occurred during sign-up. Please try again.")
+      }
     } finally {
       setIsLoading(false)
     }
