@@ -10,7 +10,7 @@
 
 ### Initial Setup
 
-```bash
+\`\`\`bash
 # 1. Clone the repository
 git clone https://github.com/fabbiochucho/v0-neu-rafiki-self-assessment-app.git
 cd v0-neu-rafiki-self-assessment-app
@@ -30,13 +30,13 @@ pnpm dev
 
 # 6. Open in browser
 # Navigate to http://localhost:3000
-```
+\`\`\`
 
 ---
 
 ## Project Structure
 
-```
+\`\`\`
 ├── app/                          # Next.js app router pages
 │   ├── auth/                    # Authentication pages
 │   ├── assessment/              # Assessment flow pages
@@ -57,38 +57,38 @@ pnpm dev
 ├── scripts/                     # Database migration scripts
 ├── public/                      # Static assets
 └── styles/                      # Global styles
-```
+\`\`\`
 
 ---
 
 ## Common Tasks
 
 ### Running the Development Server
-```bash
+\`\`\`bash
 pnpm dev
 # Server starts at http://localhost:3000
-```
+\`\`\`
 
 ### Building for Production
-```bash
+\`\`\`bash
 pnpm build
 pnpm start
-```
+\`\`\`
 
 ### Running Type Checking
-```bash
+\`\`\`bash
 pnpm tsc --noEmit
-```
+\`\`\`
 
 ### Formatting Code
-```bash
+\`\`\`bash
 pnpm format
-```
+\`\`\`
 
 ### Running Linting
-```bash
+\`\`\`bash
 pnpm lint
-```
+\`\`\`
 
 ---
 
@@ -140,13 +140,13 @@ Use Supabase dashboard:
 4. Browse tables
 
 ### Running a Database Migration
-```bash
+\`\`\`bash
 # View available migrations
 ls scripts/
 
 # Run a specific migration via Supabase SQL Editor
 # Copy script content and execute in Supabase console
-```
+\`\`\`
 
 ### Checking RLS Policies
 1. In Supabase dashboard
@@ -165,11 +165,11 @@ ls scripts/
 
 ### Issue: "Cannot find module" error
 **Solution**:
-```bash
+\`\`\`bash
 # Clear node_modules and reinstall
 rm -rf node_modules pnpm-lock.yaml
 pnpm install
-```
+\`\`\`
 
 ### Issue: CSS styles not loading
 **Solution**:
@@ -204,7 +204,7 @@ pnpm install
 
 Required variables in `.env.local`:
 
-```env
+\`\`\`env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://[project].supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=[anon-key]
@@ -216,7 +216,7 @@ POSTGRES_PRISMA_URL=postgresql://...
 
 # Optional
 NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL=http://localhost:3000
-```
+\`\`\`
 
 ---
 
@@ -229,7 +229,7 @@ NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL=http://localhost:3000
 - Avoid `any` type
 
 ### Component Structure
-```tsx
+\`\`\`tsx
 // Prefer this structure:
 interface MyComponentProps {
   title: string
@@ -239,7 +239,7 @@ interface MyComponentProps {
 export function MyComponent({ title, onAction }: MyComponentProps) {
   return <div>{title}</div>
 }
-```
+\`\`\`
 
 ### Validation
 - Use Zod for form validation

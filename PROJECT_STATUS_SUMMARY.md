@@ -154,7 +154,7 @@
 ### Immediate Actions (This Week)
 
 **1. Stakeholder Alignment** (1 day)
-```
+\`\`\`
 Action: Schedule sync with all stakeholders
 Agenda:
 - Review comprehensive assessment report
@@ -163,10 +163,10 @@ Agenda:
 - Allocate resources
 Timeline: Complete by EOW
 Owner: Product Manager
-```
+\`\`\`
 
 **2. Team Onboarding** (2 days)
-```
+\`\`\`
 Action: Prepare team for execution phase
 Tasks:
 - Distribute assessment documents
@@ -175,10 +175,10 @@ Tasks:
 - Configure CI/CD pipeline
 Timeline: Complete by EOW
 Owner: Technical Lead
-```
+\`\`\`
 
 **3. Sprint Planning** (1 day)
-```
+\`\`\`
 Action: Plan Week 1 sprints
 Sprint 1 (Days 1-3):
 - Assessment flow implementation
@@ -188,10 +188,10 @@ Sprint 2 (Days 4-5):
 - Polish and testing
 - Documentation
 Owner: Product Manager
-```
+\`\`\`
 
 **4. Create Product Demo** (Parallel)
-```
+\`\`\`
 Action: Begin demo script and planning
 Why: Critical for marketing/fundraising
 Timeline: Complete by end of Week 2
@@ -201,7 +201,7 @@ Format: 90-second video showing:
 - Assessment
 - Results
 - Resource discovery
-```
+\`\`\`
 
 ---
 
@@ -224,7 +224,7 @@ Format: 90-second video showing:
 ## RESOURCE REQUIREMENTS
 
 ### Team Composition
-```
+\`\`\`
 1x Product Manager (Lead)
 1x Technical Lead / Architect
 2x Backend Developers
@@ -237,7 +237,7 @@ Format: 90-second video showing:
 0.5x Marketing/Communications
 ---
 Total: 11-12 people (or 2-person core + outsource)
-```
+\`\`\`
 
 ### Budget Considerations
 - **Development**: 8-10 weeks × team cost

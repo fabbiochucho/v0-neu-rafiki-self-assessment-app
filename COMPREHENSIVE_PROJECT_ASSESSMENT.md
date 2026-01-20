@@ -243,7 +243,7 @@ NeuRafiki has established a solid technical foundation with complete authenticat
 ### Required Strategic Narrative Additions
 
 **Section: "Why NeuRafiki?"**
-```
+\`\`\`
 Problem Statement:
 - 85% of neurodivergent individuals in Africa lack access to proper screening
 - Current tools are not culturally adapted, leading to misdiagnosis
@@ -263,7 +263,7 @@ Why Us:
 - [Team expertise required: neurology/psychology PhD, African healthcare background]
 - [Clinical validation partnerships]
 - [Local community endorsements]
-```
+\`\`\`
 
 ---
 

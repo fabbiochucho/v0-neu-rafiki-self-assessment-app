@@ -477,7 +477,7 @@
 
 ### Recommended Team Structure
 
-```
+\`\`\`
 Product Manager (1)
 ├── Technical Lead / Architect
 ├── Backend Lead
@@ -491,7 +491,7 @@ Product Manager (1)
 ├── Designer (UI/UX)
 ├── Content Lead
 └── Marketing/Communications
-```
+\`\`\`
 
 ### Time Allocation per Discipline
 

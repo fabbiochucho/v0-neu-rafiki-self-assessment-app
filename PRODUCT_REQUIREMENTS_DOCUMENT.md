@@ -177,7 +177,7 @@ NeuRafiki is a comprehensive, culturally-adapted digital health platform that en
 ### 4.2 Primary Use Cases
 
 #### Use Case 1: Individual Self-Assessment
-```
+\`\`\`
 User Story: As a neurodivergent individual, I want to self-assess my symptoms 
            to understand if I may have autism/ADHD/dyslexia so I can seek 
            appropriate support.
@@ -194,10 +194,10 @@ Success Metrics:
 - 90%+ completion rate
 - <2 min average time per question
 - 95%+ user satisfaction with clarity of results
-```
+\`\`\`
 
 #### Use Case 2: Parent Multi-Child Assessment
-```
+\`\`\`
 User Story: As a parent, I want to assess multiple children's neurodivergence 
            across different domains so I can understand each child's unique needs 
            and advocate effectively.
@@ -216,10 +216,10 @@ Success Metrics:
 - Multi-profile support fully functional
 - Results comparison available
 - Recommendations for each child
-```
+\`\`\`
 
 #### Use Case 3: School-Based Bulk Assessment
-```
+\`\`\`
 User Story: As a school coordinator, I want to administer assessments to all 
            students in my class so I can identify who needs special support.
 
@@ -237,10 +237,10 @@ Success Metrics:
 - Bulk enrollment <5 min for 50 students
 - Student completion rate >80%
 - Actionable insights for each student
-```
+\`\`\`
 
 #### Use Case 4: Longitudinal Progress Tracking
-```
+\`\`\`
 User Story: As a provider, I want to track assessment results over 6-12 months 
            so I can measure intervention effectiveness and adjust treatment.
 
@@ -258,7 +258,7 @@ Success Metrics:
 - Automated reminders deliver >90%
 - Follow-up completion rate >75%
 - Progress visualization clear and actionable
-```
+\`\`\`
 
 ---
 
@@ -326,7 +326,7 @@ Success Metrics:
 - [ ] Risk stratification: Low/Moderate/High
 
 **Scoring Logic**:
-```
+\`\`\`
 Risk Calculation:
 - Low Risk: 0-33% of domain indicators present
 - Moderate Risk: 34-66% of domain indicators present
@@ -337,7 +337,7 @@ Indicators by Domain:
 - ADHD: Inattention + hyperactivity/impulsivity
 - Dyslexia: Reading + writing + spelling patterns
 - etc.
-```
+\`\`\`
 
 #### Feature 4: Results & Insights
 **Acceptance Criteria**:
@@ -464,7 +464,7 @@ Indicators by Domain:
 
 ### 6.3 User Flow Diagrams
 
-```
+\`\`\`
 Landing Page
     ↓
 [Sign Up] or [Sign In]
@@ -484,7 +484,7 @@ Landing Page
 [Schedule Follow-up] or [Browse Resources]
     ↓
 Dashboard → [Manage Profiles] / [View History] / [Track Progress]
-```
+\`\`\`
 
 ---
 
