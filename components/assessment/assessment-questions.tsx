@@ -75,6 +75,51 @@ export function AssessmentQuestions({ assessment, questions, existingResponses }
       ...prev,
       [questionId]: value,
     }))
+    setError(null)
+  }
+
+  const handleNext = async () => {
+    const currentQ = questions[currentQuestionIndex]
+    const response = responses[currentQ.id]
+
+    // Validate response
+    if (!response) {
+      setError("Please select an answer before proceeding")
+      return
+    }
+
+    // Save the response
+    await saveResponse(currentQ.id, response)
+
+    if (isLastQuestion) {
+      // Calculate final results and redirect
+      try {
+        setIsLoading(true)
+        const { error: resultError } = await supabase
+          .from("assessments")
+          .update({
+            completed_at: new Date().toISOString(),
+            status: "completed",
+          })
+          .eq("id", assessment.id)
+
+        if (resultError) throw resultError
+
+        router.push(`/assessment/${assessment.id}/results`)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to complete assessment")
+        setIsLoading(false)
+      }
+    } else {
+      setCurrentQuestionIndex((prev) => prev + 1)
+    }
+  }
+
+  const handlePrevious = () => {
+    if (!isFirstQuestion) {
+      setCurrentQuestionIndex((prev) => prev - 1)
+      setError(null)
+    }
   }
 
   const calculateScore = (question: Question, responseValue: string): number => {
@@ -99,52 +144,48 @@ export function AssessmentQuestions({ assessment, questions, existingResponses }
     const score = calculateScore(question, responseValue)
 
     try {
-      const { error } = await supabase.from("assessment_responses").upsert(
-        {
-          assessment_id: assessment.id,
-          question_id: questionId,
-          response_value: responseValue,
-          score: score,
-        },
-        {
-          onConflict: "assessment_id,question_id",
-        },
-      )
-
-      if (error) {
-        console.error("[v0] Error saving response:", error)
-        throw error
-      }
-      console.log("[v0] Response saved successfully for question:", questionId)
-    } catch (error) {
-      console.error("Error saving response:", error)
-      throw error
-    }
-  }
-
-  const handleNext = async () => {
-    if (currentQuestion && responses[currentQuestion.id]) {
       setIsSaving(true)
-      try {
-        await saveResponse(currentQuestion.id, responses[currentQuestion.id])
-      } catch (error) {
-        setError(error instanceof Error ? error.message : "Failed to save response")
-        setIsSaving(false)
-        return
+      setError(null)
+
+      // Check if response exists for this assessment and question
+      const { data: existingResponse } = await supabase
+        .from("assessment_responses")
+        .select("id")
+        .eq("assessment_id", assessment.id)
+        .eq("question_id", questionId)
+        .maybeSingle()
+
+      if (existingResponse) {
+        // Update existing response
+        const { error: updateError } = await supabase
+          .from("assessment_responses")
+          .update({
+            response_value: responseValue,
+            score: score,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingResponse.id)
+
+        if (updateError) throw updateError
+      } else {
+        // Insert new response
+        const { error: insertError } = await supabase
+          .from("assessment_responses")
+          .insert({
+            assessment_id: assessment.id,
+            question_id: questionId,
+            response_value: responseValue,
+            score: score,
+          })
+
+        if (insertError) throw insertError
       }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to save response"
+      setError(message)
+      console.error("[v0] Error saving response:", err)
+    } finally {
       setIsSaving(false)
-    }
-
-    if (isLastQuestion) {
-      await completeAssessment()
-    } else {
-      setCurrentQuestionIndex((prev) => prev + 1)
-    }
-  }
-
-  const handlePrevious = () => {
-    if (!isFirstQuestion) {
-      setCurrentQuestionIndex((prev) => prev - 1)
     }
   }
 

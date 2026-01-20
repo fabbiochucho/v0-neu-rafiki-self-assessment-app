@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import Link from "next/link"
-import { Heart, ArrowLeft, Download, Calendar, TrendingUp } from "lucide-react"
+import { Heart, ArrowLeft, Download, Calendar, TrendingUp, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react"
+import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
 interface AssessmentResultsPageProps {
   params: Promise<{ id: string }>
@@ -92,6 +93,30 @@ export default async function AssessmentResultsPage({ params }: AssessmentResult
       ] || "Consult with healthcare professionals for personalized guidance based on these results."
     )
   }
+
+  // Prepare data for charts
+  const chartData = results.map((result: any) => ({
+    domain: result.domain_name,
+    percentage: result.percentage_score,
+    score: result.total_score,
+    maxScore: result.max_possible_score,
+    riskLevel: result.risk_level,
+  }))
+
+  const riskDistribution = {
+    high: results.filter((r: any) => r.risk_level === "high").length,
+    moderate: results.filter((r: any) => r.risk_level === "moderate").length,
+    low: results.filter((r: any) => r.risk_level === "low").length,
+  }
+
+  const riskPieData = [
+    { name: "High Risk", value: riskDistribution.high, fill: "#dc2626" },
+    { name: "Moderate Risk", value: riskDistribution.moderate, fill: "#f59e0b" },
+    { name: "Low Risk", value: riskDistribution.low, fill: "#10b981" },
+  ].filter((item) => item.value > 0)
+
+  const overallRiskLevel =
+    riskDistribution.high > 0 ? "high" : riskDistribution.moderate > 0 ? "moderate" : "low"
 
   return (
     <div className="min-h-screen bg-background">
@@ -205,6 +230,86 @@ export default async function AssessmentResultsPage({ params }: AssessmentResult
             </Card>
           ))}
         </div>
+
+        {/* Charts Section */}
+        <div className="grid md:grid-cols-2 gap-6 mt-8">
+          {/* Score Distribution Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Domain Score Distribution</CardTitle>
+              <CardDescription>Percentage scores across assessed domains</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="domain" angle={-45} textAnchor="end" height={80} />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="percentage" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Risk Level Distribution */}
+          {riskPieData.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Risk Level Distribution</CardTitle>
+                <CardDescription>Summary of assessment findings</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={riskPieData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value }) => `${name}: ${value}`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {riskPieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Overall Risk Assessment Summary */}
+        <Card className={`mt-8 border-2 ${overallRiskLevel === "high" ? "border-red-200 bg-red-50" : overallRiskLevel === "moderate" ? "border-yellow-200 bg-yellow-50" : "border-green-200 bg-green-50"}`}>
+          <CardHeader>
+            <div className="flex items-center space-x-3">
+              {overallRiskLevel === "high" ? (
+                <AlertCircle className="h-6 w-6 text-red-600" />
+              ) : overallRiskLevel === "moderate" ? (
+                <AlertTriangle className="h-6 w-6 text-yellow-600" />
+              ) : (
+                <CheckCircle2 className="h-6 w-6 text-green-600" />
+              )}
+              <CardTitle className={overallRiskLevel === "high" ? "text-red-900" : overallRiskLevel === "moderate" ? "text-yellow-900" : "text-green-900"}>
+                Overall Assessment Summary
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className={`text-sm leading-relaxed ${overallRiskLevel === "high" ? "text-red-800" : overallRiskLevel === "moderate" ? "text-yellow-800" : "text-green-800"}`}>
+              {overallRiskLevel === "high"
+                ? "This assessment indicates HIGH indicators across one or more domains. We strongly recommend scheduling a consultation with qualified healthcare professionals for comprehensive evaluation and personalized support planning."
+                : overallRiskLevel === "moderate"
+                  ? "This assessment indicates MODERATE indicators that warrant attention. Consider follow-up evaluations and implementing targeted support strategies while monitoring for changes."
+                  : "This assessment indicates LOW indicators of concern. Continue with current support approaches and maintain regular monitoring."}
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Important Disclaimer */}
         <Card className="mt-8 border-amber-200 bg-amber-50">

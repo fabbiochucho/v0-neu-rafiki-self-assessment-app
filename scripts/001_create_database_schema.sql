@@ -131,19 +131,27 @@ CREATE TABLE IF NOT EXISTS public.notifications (
 -- Enable Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.assessments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.assessment_responses ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.assessment_results ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.assessment_domains ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies for profiles
+CREATE POLICY "profiles_select_policy" ON public.profiles
+  FOR SELECT USING (true);
+
+CREATE POLICY "profiles_insert_policy" ON public.profiles
+  FOR INSERT WITH CHECK (true);
+
 CREATE POLICY "profiles_select_own" ON public.profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "profiles_insert_own" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "profiles_update_own" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "profiles_delete_own" ON public.profiles FOR DELETE USING (auth.uid() = id);
 
 -- Create RLS policies for user_profiles
+CREATE POLICY "user_profiles_select_policy" ON public.user_profiles
+  FOR SELECT USING (true);
+
+CREATE POLICY "user_profiles_insert_policy" ON public.user_profiles
+  FOR INSERT WITH CHECK (true);
+
 CREATE POLICY "user_profiles_select_own" ON public.user_profiles FOR SELECT USING (
   user_id IN (SELECT id FROM public.profiles WHERE auth.uid() = id)
 );
