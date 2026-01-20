@@ -268,7 +268,3 @@ export default function ResourcesPage() {
     </div>
   )
 }
-
-export function Loading() {
-  return null
-}
