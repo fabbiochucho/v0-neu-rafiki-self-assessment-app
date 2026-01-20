@@ -1,3 +1,4 @@
+import { Tooltip } from "@/components/ui/tooltip"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -6,7 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import Link from "next/link"
 import { Heart, ArrowLeft, Download, Calendar, TrendingUp, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react"
-import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
+import { ResultsCharts } from "@/components/assessment/results-charts"
+import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Bar, PieChart, Pie, Cell } from "recharts"
 
 interface AssessmentResultsPageProps {
   params: Promise<{ id: string }>
@@ -232,57 +234,7 @@ export default async function AssessmentResultsPage({ params }: AssessmentResult
         </div>
 
         {/* Charts Section */}
-        <div className="grid md:grid-cols-2 gap-6 mt-8">
-          {/* Score Distribution Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Domain Score Distribution</CardTitle>
-              <CardDescription>Percentage scores across assessed domains</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="domain" angle={-45} textAnchor="end" height={80} />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="percentage" fill="#3b82f6" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Risk Level Distribution */}
-          {riskPieData.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Risk Level Distribution</CardTitle>
-                <CardDescription>Summary of assessment findings</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={riskPieData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, value }) => `${name}: ${value}`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {riskPieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        <ResultsCharts chartData={chartData} riskPieData={riskPieData} />
 
         {/* Overall Risk Assessment Summary */}
         <Card className={`mt-8 border-2 ${overallRiskLevel === "high" ? "border-red-200 bg-red-50" : overallRiskLevel === "moderate" ? "border-yellow-200 bg-yellow-50" : "border-green-200 bg-green-50"}`}>
