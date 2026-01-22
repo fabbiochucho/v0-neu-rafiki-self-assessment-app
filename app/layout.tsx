@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
+import { DemoBanner } from "@/components/demo/demo-banner"
 import "./globals.css"
 
 const inter = Inter({
@@ -26,7 +27,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
-      <body className="bg-background text-foreground font-sans antialiased">{children}</body>
+      <body className="bg-background text-foreground font-sans antialiased">
+        <DemoBanner />
+        {children}
+      </body>
     </html>
   )
 }
