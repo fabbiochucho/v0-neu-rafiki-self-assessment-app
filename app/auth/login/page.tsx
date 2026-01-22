@@ -69,7 +69,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="flex flex-col gap-6">
           {/* Logo */}
-          <div className="flex items-center justify-center space-x-2 mb-4">
+          <div className="flex items-center justify-center space-x-2 mb-2">
             <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
               <Heart className="h-4 w-4 text-primary-foreground" />
             </div>
@@ -79,11 +79,11 @@ export default function LoginPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl text-center">Welcome Back</CardTitle>
-              <CardDescription className="text-center">Sign in to continue your neurodivergent journey</CardDescription>
+              <CardDescription className="text-center">Sign in to continue your journey</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleLogin}>
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
@@ -91,6 +91,7 @@ export default function LoginPage() {
                       type="email"
                       placeholder="your@email.com"
                       required
+                      autoComplete="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
@@ -100,7 +101,9 @@ export default function LoginPage() {
                     <Input
                       id="password"
                       type="password"
+                      placeholder="Enter your password"
                       required
+                      autoComplete="current-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
@@ -110,7 +113,7 @@ export default function LoginPage() {
                       {error}
                     </div>
                   )}
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full mt-2" disabled={isLoading}>
                     {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
                 </div>

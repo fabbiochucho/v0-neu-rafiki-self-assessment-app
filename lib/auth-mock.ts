@@ -20,14 +20,18 @@ export async function mockSignUp(email: string, password: string) {
   }
   
   // Store mock user in localStorage
-  localStorage.setItem(
-    'mock_auth_user',
-    JSON.stringify({
-      id: Math.random().toString(36).substr(2, 9),
-      email,
-      createdAt: new Date().toISOString(),
-    })
-  )
+  const mockUser = {
+    id: Math.random().toString(36).substr(2, 9),
+    email,
+    createdAt: new Date().toISOString(),
+  }
+  
+  localStorage.setItem('mock_auth_user', JSON.stringify(mockUser))
+  
+  // Also set a cookie so middleware can detect the session
+  if (typeof document !== 'undefined') {
+    document.cookie = `mock_user_session=${JSON.stringify(mockUser)}; path=/; max-age=86400; SameSite=Strict`
+  }
   
   return { user: { email }, session: null }
 }
@@ -41,14 +45,19 @@ export async function mockSignIn(email: string, password: string) {
   }
   
   // For demo, accept any email/password combination
-  localStorage.setItem(
-    'mock_auth_user',
-    JSON.stringify({
-      id: Math.random().toString(36).substr(2, 9),
-      email,
-      createdAt: new Date().toISOString(),
-    })
-  )
+  const mockUser = {
+    id: Math.random().toString(36).substr(2, 9),
+    email,
+    createdAt: new Date().toISOString(),
+  }
+  
+  localStorage.setItem('mock_auth_user', JSON.stringify(mockUser))
+  
+  // Also set a cookie so middleware can detect the session
+  if (typeof document !== 'undefined') {
+    // Set cookie that persists across requests
+    document.cookie = `mock_user_session=${JSON.stringify(mockUser)}; path=/; max-age=86400; SameSite=Strict`
+  }
   
   return { user: { email }, session: { access_token: 'mock_token' } }
 }
@@ -62,5 +71,7 @@ export function getMockUser() {
 export function clearMockUser() {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('mock_auth_user')
+    // Clear the cookie by setting max-age to 0
+    document.cookie = 'mock_user_session=; path=/; max-age=0; SameSite=Strict'
   }
 }
