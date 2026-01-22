@@ -115,6 +115,7 @@
   --font-mono: var(--font-jetbrains-mono);
 }
 
+
 @layer base {
   * {
     @apply border-border;
