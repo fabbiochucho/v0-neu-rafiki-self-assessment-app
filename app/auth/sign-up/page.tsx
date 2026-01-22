@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react"
-
+import { isMockMode, mockSignUp } from "@/lib/auth-mock"
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,37 +36,41 @@ export default function Page() {
       return;
     }
 
-    try {
-      // Log environment variables for debugging
-      console.log("[v0] NEXT_PUBLIC_SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-      console.log("[v0] NEXT_PUBLIC_SUPABASE_ANON_KEY exists:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-      
-      const supabase = createClient();
-      console.log("[v0] Supabase client created");
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      setIsLoading(false);
+      return;
+    }
 
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo:
-            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-            `${window.location.origin}/auth/sign-up-success`,
-        },
-      });
-      
-      if (error) throw error;
-      console.log("[v0] Sign-up successful");
+    try {
+      // Use mock auth in preview environment, real auth in production
+      if (isMockMode()) {
+        console.log("[v0] Using mock authentication for preview");
+        await mockSignUp(email, password);
+        console.log("[v0] Mock sign-up successful");
+      } else {
+        console.log("[v0] Using real Supabase authentication");
+        const supabase = createClient();
+
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo:
+              process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
+              `${window.location.origin}/auth/sign-up-success`,
+          },
+        });
+
+        if (error) throw error;
+        console.log("[v0] Supabase sign-up successful");
+      }
+
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
       console.error("[v0] Sign-up error:", error);
       if (error instanceof Error) {
-        if (error.message.includes("Failed to fetch")) {
-          setError(
-            "Unable to reach the authentication server. Please check your internet connection and ensure Supabase is properly configured."
-          );
-        } else {
-          setError(error.message);
-        }
+        setError(error.message);
       } else {
         setError("An error occurred during sign-up. Please try again.");
       }

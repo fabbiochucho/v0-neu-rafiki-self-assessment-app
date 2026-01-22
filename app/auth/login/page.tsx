@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import { isMockMode, mockSignIn } from "@/lib/auth-mock"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,18 +26,26 @@ export default function LoginPage() {
 
     try {
       console.log("[v0] Login attempt with email:", email)
-      const supabase = createClient()
-      console.log("[v0] Supabase client created for login")
 
-      const { error, data } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      // Use mock auth in preview environment, real auth in production
+      if (isMockMode()) {
+        console.log("[v0] Using mock authentication for preview")
+        await mockSignIn(email, password)
+        console.log("[v0] Mock login successful")
+      } else {
+        console.log("[v0] Using real Supabase authentication")
+        const supabase = createClient()
 
-      console.log("[v0] Sign in response:", { error: error?.message, user: data?.user?.email })
+        const { error, data } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
 
-      if (error) {
-        throw new Error(error.message || "Authentication failed")
+        if (error) {
+          throw new Error(error.message || "Authentication failed")
+        }
+
+        console.log("[v0] Supabase login successful")
       }
 
       console.log("[v0] Login successful, redirecting to dashboard")
@@ -47,16 +55,7 @@ export default function LoginPage() {
       let errorMessage = "An error occurred during login"
 
       if (error instanceof Error) {
-        if (error.message.includes("Failed to fetch")) {
-          errorMessage =
-            "Cannot connect to the authentication server. This may be a temporary network issue. Please try again in a moment."
-        } else if (error.message.includes("Invalid login credentials")) {
-          errorMessage = "Invalid email or password"
-        } else if (error.message.includes("Email not confirmed")) {
-          errorMessage = "Please verify your email before logging in"
-        } else {
-          errorMessage = error.message
-        }
+        errorMessage = error.message
       }
 
       setError(errorMessage)
