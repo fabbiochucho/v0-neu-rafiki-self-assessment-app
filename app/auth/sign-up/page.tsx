@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react"
+
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +27,6 @@ export default function Page() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const supabase = createClient();
     setIsLoading(true);
     setError(null);
 
@@ -36,19 +37,39 @@ export default function Page() {
     }
 
     try {
+      // Log environment variables for debugging
+      console.log("[v0] NEXT_PUBLIC_SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log("[v0] NEXT_PUBLIC_SUPABASE_ANON_KEY exists:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+      
+      const supabase = createClient();
+      console.log("[v0] Supabase client created");
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo:
             process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-            `${window.location.origin}/protected`,
+            `${window.location.origin}/auth/sign-up-success`,
         },
       });
+      
       if (error) throw error;
+      console.log("[v0] Sign-up successful");
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      console.error("[v0] Sign-up error:", error);
+      if (error instanceof Error) {
+        if (error.message.includes("Failed to fetch")) {
+          setError(
+            "Unable to reach the authentication server. Please check your internet connection and ensure Supabase is properly configured."
+          );
+        } else {
+          setError(error.message);
+        }
+      } else {
+        setError("An error occurred during sign-up. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
