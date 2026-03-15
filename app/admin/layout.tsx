@@ -10,7 +10,7 @@ export default function AdminLayout({
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-card">
+      <aside className="w-64 border-r bg-card" style={{ borderColor: 'hsl(var(--border))' }}>
         <div className="p-6">
           <h2 className="text-lg font-bold">NeuRafiki Admin</h2>
         </div>
