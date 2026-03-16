@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@edge-runtime/vm": "latest",
+    "@faker-js/faker": "10.3.0",
     "@hookform/resolvers": "^3.10.0",
     "@opentelemetry/api": "latest",
     "@radix-ui/react-accordion": "1.2.2",
