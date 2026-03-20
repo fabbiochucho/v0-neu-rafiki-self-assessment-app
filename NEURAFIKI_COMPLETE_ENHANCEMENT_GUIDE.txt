@@ -1,0 +1,445 @@
+NEURAFIKI COMPLETE ENHANCEMENT GUIDE
+=====================================
+Complete implementation specifications for all 7 phases of NeuRafiki strengthening.
+
+PHASE 1: DESIGN SYSTEM & ACCESSIBILITY ✅ COMPLETE
+====================================================
+
+COMPLETED:
+- app/globals.css updated with African-inspired color palette
+  * Primary: Terracotta/burnt sienna (15 70% 42%)
+  * Secondary: Golden (38 85% 54%)
+  * Accent: Deep teal (165 75% 35%)
+  * Dark mode variants for accessibility
+- Accessibility CSS settings implemented:
+  * Dyslexia-friendly typography mode (OpenDyslexic font)
+  * High contrast mode toggle
+  * Reduced motion support (prefers-reduced-motion)
+  * Focus mode (minimal distractions)
+  * Font sizing scale (8px-24px)
+  * Keyboard focus styles (3px outline)
+  * Skip to main content link
+
+PHASE 2: ASSESSMENT FEATURES (IN PROGRESS)
+===========================================
+
+To implement:
+
+2.1 DATABASE SCHEMA MIGRATIONS
+File: scripts/002-assessment-features.sql
+
+CREATE TABLE assessment_drafts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  assessment_id UUID REFERENCES assessments(id),
+  domain_ids TEXT[] NOT NULL,
+  profile_id UUID NOT NULL REFERENCES user_profiles(id),
+  progress_data JSONB, -- Stores responses for each question
+  progress_percentage INT DEFAULT 0,
+  last_saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + INTERVAL '30 days',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE assessment_comparisons (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  baseline_assessment_id UUID NOT NULL REFERENCES assessments(id),
+  follow_up_assessment_id UUID NOT NULL REFERENCES assessments(id),
+  comparison_data JSONB, -- Stores score changes, trends
+  improvement_areas TEXT[],
+  decline_areas TEXT[],
+  overall_change_percentage DECIMAL(5,2),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE assessment_exports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  assessment_id UUID NOT NULL REFERENCES assessments(id),
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  export_format VARCHAR (20), -- 'pdf', 'json', 'csv'
+  file_url TEXT,
+  is_professional_report BOOLEAN DEFAULT false,
+  shared_with_emails TEXT[],
+  shareable_token VARCHAR(255) UNIQUE,
+  token_expires_at TIMESTAMP,
+  view_count INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+2.2 SERVICE: lib/assessment-features.ts
+```typescript
+import { createClient } from "@/lib/supabase/server"
+
+export interface AssessmentDraft {
+  id: string
+  userId: string
+  profileId: string
+  domainIds: string[]
+  progressData: Record<string, any>
+  progressPercentage: number
+  lastSavedAt: string
+}
+
+export async function saveAssessmentDraft(
+  userId: string,
+  profileId: string,
+  domainIds: string[],
+  progressData: Record<string, any>,
+  progressPercentage: number
+): Promise<AssessmentDraft> {
+  const supabase = await createClient()
+  
+  const { data, error } = await supabase
+    .from('assessment_drafts')
+    .upsert({
+      user_id: userId,
+      profile_id: profileId,
+      domain_ids: domainIds,
+      progress_data: progressData,
+      progress_percentage: progressPercentage,
+      updated_at: new Date().toISOString()
+    })
+    .select()
+    .single()
+    
+  if (error) throw error
+  return data
+}
+
+export async function getAssessmentDraft(
+  userId: string,
+  profileId: string
+): Promise<AssessmentDraft | null> {
+  const supabase = await createClient()
+  
+  const { data } = await supabase
+    .from('assessment_drafts')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('profile_id', profileId)
+    .single()
+    
+  return data
+}
+
+export async function resumeAssessmentDraft(
+  userId: string,
+  profileId: string
+): Promise<AssessmentDraft> {
+  // Fetch draft and update last accessed
+  const supabase = await createClient()
+  
+  const { data } = await supabase
+    .from('assessment_drafts')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('profile_id', profileId)
+    .single()
+    
+  return data
+}
+
+export async function compareAssessments(
+  baselineAssessmentId: string,
+  followUpAssessmentId: string,
+  userId: string
+) {
+  const supabase = await createClient()
+  
+  // Fetch both assessments
+  const { data: baseline } = await supabase
+    .from('assessments')
+    .select('*, assessment_results(*)')
+    .eq('id', baselineAssessmentId)
+    .single()
+    
+  const { data: followUp } = await supabase
+    .from('assessments')
+    .select('*, assessment_results(*)')
+    .eq('id', followUpAssessmentId)
+    .single()
+    
+  // Calculate changes
+  const improvementAreas: string[] = []
+  const declineAreas: string[] = []
+  let totalChange = 0
+  
+  baseline.assessment_results?.forEach((baseResult: any) => {
+    const followResult = followUp.assessment_results?.find(
+      (r: any) => r.domain_name === baseResult.domain_name
+    )
+    if (followResult) {
+      const change = followResult.percentage_score - baseResult.percentage_score
+      totalChange += change
+      if (change > 5) improvementAreas.push(baseResult.domain_name)
+      if (change < -5) declineAreas.push(baseResult.domain_name)
+    }
+  })
+  
+  // Store comparison
+  const { data } = await supabase
+    .from('assessment_comparisons')
+    .insert({
+      user_id: userId,
+      baseline_assessment_id: baselineAssessmentId,
+      follow_up_assessment_id: followUpAssessmentId,
+      improvement_areas: improvementAreas,
+      decline_areas: declineAreas,
+      overall_change_percentage: totalChange / (baseline.assessment_results?.length || 1)
+    })
+    .select()
+    .single()
+    
+  return data
+}
+
+export async function exportAssessmentReport(
+  assessmentId: string,
+  userId: string,
+  format: 'pdf' | 'json' = 'pdf',
+  isProfessional: boolean = false
+) {
+  const supabase = await createClient()
+  
+  // Generate shareable token
+  const token = Math.random().toString(36).substring(2, 15)
+  
+  const { data } = await supabase
+    .from('assessment_exports')
+    .insert({
+      assessment_id: assessmentId,
+      user_id: userId,
+      export_format: format,
+      is_professional_report: isProfessional,
+      shareable_token: token,
+      token_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    })
+    .select()
+    .single()
+    
+  return data
+}
+
+export async function getAssessmentResults(assessmentId: string) {
+  const supabase = await createClient()
+  
+  const { data } = await supabase
+    .from('assessments')
+    .select('*, assessment_results(*), user_profiles(*)')
+    .eq('id', assessmentId)
+    .single()
+    
+  return data
+}
+```
+
+2.3 COMPONENTS: Resume Assessment Modal
+File: components/assessment/resume-assessment-modal.tsx
+- Show user their saved draft
+- Display progress bar
+- Option to resume or start fresh
+- Auto-detect and offer resume on dashboard
+
+2.4 COMPONENTS: Assessment Comparison View
+File: app/dashboard/assessment-comparison/page.tsx
+- Side-by-side score comparison
+- Progress visualization (improvement vs decline)
+- Trend charts for repeated assessments
+- Recommendations based on changes
+
+2.5 COMPONENTS: Export Results UI
+File: components/assessment/export-results.tsx
+- PDF download button
+- Professional report (for healthcare providers)
+- Email sharing with secure links
+- QR code for sharing
+
+PHASE 3: ANALYTICS & MEASUREMENT
+=================================
+
+3.1 DATABASE SCHEMA: lib/analytics-events.ts
+```typescript
+export interface AnalyticsEvent {
+  id: string
+  event_type: string // 'page_view', 'assessment_start', 'question_answered', etc
+  event_category: string // 'funnel', 'engagement', 'error'
+  event_value: number
+  event_properties: Record<string, any>
+  user_id?: string
+  session_id: string
+  timestamp: string
+  user_country?: string
+  user_language?: string
+}
+
+Conversion Funnel Events:
+- landing_page_view (Category: funnel)
+- signup_initiated (Category: funnel)
+- signup_completed (Category: funnel)
+- assessment_domain_selected (Category: funnel)
+- assessment_started (Category: funnel)
+- assessment_question_answered (Category: funnel, Properties: domain, question_id)
+- assessment_completed (Category: funnel, Properties: total_time_ms, completion_percentage)
+- results_viewed (Category: funnel)
+- next_step_selected (Category: funnel, Properties: action_type)
+
+Engagement Events:
+- question_skipped (Category: engagement, Properties: domain, reason)
+- question_reviewed (Category: engagement)
+- help_requested (Category: engagement)
+- bookmark_created (Category: engagement)
+```
+
+3.2 ANALYTICS SERVICE: lib/services/analytics.ts
+```typescript
+export async function trackEvent(event: AnalyticsEvent) {
+  const supabase = await createClient()
+  
+  const { error } = await supabase
+    .from('analytics_events')
+    .insert(event)
+    
+  if (error) console.error('Analytics error:', error)
+}
+
+export async function getConversionFunnel(
+  startDate: string,
+  endDate: string,
+  country?: string
+) {
+  const supabase = await createClient()
+  
+  const events = [
+    'landing_page_view',
+    'signup_initiated',
+    'signup_completed',
+    'assessment_started',
+    'assessment_completed'
+  ]
+  
+  const funnel = await Promise.all(
+    events.map(event =>
+      supabase
+        .from('analytics_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_type', event)
+        .gte('timestamp', startDate)
+        .lte('timestamp', endDate)
+        .then(({ count }) => ({
+          stage: event,
+          count: count || 0
+        }))
+    )
+  )
+  
+  return funnel
+}
+
+export async function getCohortAnalysis(
+  cohort: 'country' | 'language' | 'age_group',
+  startDate: string,
+  endDate: string
+) {
+  // Group users by cohort and track their progression through funnel
+}
+
+export async function getUserJourney(userId: string, limit: 50) {
+  const supabase = await createClient()
+  
+  const { data } = await supabase
+    .from('analytics_events')
+    .select('*')
+    .eq('user_id', userId)
+    .order('timestamp', { ascending: false })
+    .limit(limit)
+    
+  return data
+}
+```
+
+PHASE 4: INTERNATIONALIZATION
+==============================
+
+4.1 i18n Setup: lib/i18n.ts
+- Next.js i18n Router configuration
+- Support 6 languages: English, Swahili, French, Amharic, Yoruba, Portuguese
+- Auto-detect based on browser language
+
+4.2 Translation Files: public/locales/
+- Assessment questions translated
+- UI strings localized
+- Cultural adaptations per language
+
+4.3 Implementation in Components:
+- Use next-i18next hooks
+- Pluralization handling
+- RTL support where needed
+
+PHASE 5: USER PROFILES & EMAIL
+===============================
+
+5.1 Extended Profiles Database
+- Multiple profiles per user
+- Relationship type (self, parent, educator, professional)
+- Demographics optional fields
+- Assessment history tracking
+
+5.2 Email Service Integration
+- Assessment completion confirmations
+- 7-day follow-up reminder
+- 14-day progress check-in
+- 30-day recommendation
+- Newsletter opt-in
+
+5.3 Components:
+- Profile management dashboard
+- Assessment history timeline
+- Personal insights page with recommendations
+- Email preferences management
+
+PHASE 6: ADMIN DASHBOARD & SECURITY
+====================================
+
+6.1 Admin Dashboard Features:
+- User management (search, filter, deactivate)
+- Assessment analytics (completion rate, avg time)
+- Content management (questions, results interpretations)
+- Automated reporting (daily, weekly, monthly)
+- Audit logs
+
+6.2 Security Hardening:
+- Encryption at rest
+- Rate limiting
+- CSRF protection
+- SQL injection prevention
+- CSP headers
+- Regular security audits
+
+PHASE 7: INTEGRATION HUB
+=========================
+
+7.1 ANDA Directory Integration:
+- Link practitioners after assessment
+- Resource recommendations by country
+- Support group finder
+
+7.2 Content Recommendations:
+- Based on assessment results
+- Culturally adapted resources
+- Multi-language support
+
+TIMELINE:
+=========
+Phase 1: COMPLETE ✅
+Phase 2: 2 weeks (Assessment features)
+Phase 3: 1.5 weeks (Analytics)
+Phase 4: 2 weeks (i18n)
+Phase 5: 2 weeks (Profiles & Email)
+Phase 6: 1.5 weeks (Admin & Security)
+Phase 7: 2 weeks (ANDA Integration)
+
+TOTAL: 12 weeks to full enhancement completion
+
+STATUS: Ready for implementation

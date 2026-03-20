@@ -1,0 +1,378 @@
+NEURAFIKI & ANDA COMPLETE ARCHITECTURE OVERVIEW
+================================================
+
+1. NEURAFIKI PLATFORM - LAYERED ARCHITECTURE
+═════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────┐
+│                    PRESENTATION LAYER                        │
+│  ┌──────────────┬──────────────┬───────────┬──────────────┐  │
+│  │   Landing    │  Assessment  │ Dashboard │  Admin Panel │  │
+│  │   Page       │  Flow        │           │              │  │
+│  └──────────────┴──────────────┴───────────┴──────────────┘  │
+│                          ↓                                    │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │           COMPONENT LAYER (React/Next.js)              │  │
+│  │  ├─ Assessment Components (Resume, Compare, Export)    │  │
+│  │  ├─ Dashboard Components (Profiles, Reports)           │  │
+│  │  ├─ UI Components (Buttons, Cards, Forms)              │  │
+│  │  └─ Layout Components (Header, Navigation, Footer)     │  │
+│  └────────────────────────────────────────────────────────┘  │
+│                          ↓                                    │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │           SERVICE LAYER (Business Logic)               │  │
+│  │  ├─ lib/assessment-features.ts (Save, Compare, Export) │  │
+│  │  ├─ lib/analytics-service.ts (Tracking, Reporting)     │  │
+│  │  ├─ lib/auth.ts (Authentication, Authorization)        │  │
+│  │  ├─ lib/utils/analytics.ts (Metrics & Events)          │  │
+│  │  └─ lib/supabase/ (Database client)                    │  │
+│  └────────────────────────────────────────────────────────┘  │
+│                          ↓                                    │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │              API LAYER (Route Handlers)                │  │
+│  │  ├─ /api/assessment/save (Draft storage)               │  │
+│  │  ├─ /api/assessment/compare (Comparison logic)         │  │
+│  │  ├─ /api/assessment/export (PDF generation)            │  │
+│  │  ├─ /api/analytics/track (Event logging)               │  │
+│  │  ├─ /api/analytics/funnel (Conversion reports)         │  │
+│  │  ├─ /api/auth/* (Authentication endpoints)             │  │
+│  │  └─ /api/admin/* (Admin operations)                    │  │
+│  └────────────────────────────────────────────────────────┘  │
+│                          ↓                                    │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│                    DATABASE LAYER                            │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │              Supabase PostgreSQL                     │   │
+│  │  ┌─────────────────┬─────────────────┐              │   │
+│  │  │   User Tables   │  Assessment     │              │   │
+│  │  │  ├─ auth.users  │  Tables         │              │   │
+│  │  │  ├─ profiles    │  ├─ assessments │              │   │
+│  │  │  └─ user        │  ├─ assessment_ │              │   │
+│  │  │     _profiles   │  │   results    │              │   │
+│  │  │                 │  ├─ assessment_ │              │   │
+│  │  │                 │  │   domains    │              │   │
+│  │  │                 │  └─ assessment_ │              │   │
+│  │  │                 │      _questions │              │   │
+│  │  └─────────────────┴─────────────────┘              │   │
+│  │  ┌─────────────────┬─────────────────┐              │   │
+│  │  │   Feature       │   Analytics     │              │   │
+│  │  │   Tables        │   Tables        │              │   │
+│  │  │  ├─ assessment_ │  ├─ analytics_  │              │   │
+│  │  │  │   drafts     │  │   events     │              │   │
+│  │  │  ├─ assessment_ │  ├─ question_   │              │   │
+│  │  │  │   comparisons│  │   analytics  │              │   │
+│  │  │  └─ assessment_ │  └─ assessment_ │              │   │
+│  │  │      _exports   │      _quality_  │              │   │
+│  │  │                 │      metrics    │              │   │
+│  │  └─────────────────┴─────────────────┘              │   │
+│  │  ┌────────────────────────────────────┐             │   │
+│  │  │   Support Tables                   │             │   │
+│  │  │  ├─ organizations                  │             │   │
+│  │  │  ├─ follow_up_assessments         │             │   │
+│  │  │  └─ appointments                   │             │   │
+│  │  └────────────────────────────────────┘             │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  Schemas:                                                   │
+│  ├─ Row Level Security (RLS) policies                      │
+│  ├─ Indexes for performance optimization                   │
+│  ├─ Views for analytics dashboards                         │
+│  └─ SQL functions for complex operations                   │
+└─────────────────────────────────────────────────────────────┘
+
+
+2. ANDA ECOSYSTEM INTEGRATION
+═══════════════════════════════════
+
+NEURAFIKI (Assessment)
+        ↓
+   Results Page
+        ↓
+   ┌───┴───┬────────┬───────────┬──────────┐
+   ↓       ↓        ↓           ↓          ↓
+ANDA     ANDA     ANDA        ANDA       ANDA
+LEARNING DIRECTORY COMMUNITY   TOOLS    ADVOCACY
+(Courses)(Specialists)(Forum) (Apps)   (Policy)
+   ↓       ↓        ↓           ↓          ↓
+ "Start   "Book    "Connect    "Build    "Support
+  Course" Appt"    w/ Others"  Toolkit"  Policy"
+
+
+DATA FLOW:
+
+NeuRafiki User Assessment
+     ↓
+Captures:
+  • Profile type (ADHD, Autism, Dyslexia, etc.)
+  • Location (country, city)
+  • Language preference
+  • Age group
+  • Assessment responses (800+ questions)
+  • Time patterns & behavior
+     ↓
+Feeds to:
+  • ANDA Learning (course recommendations)
+  • ANDA Directory (specialist suggestions)
+  • ANDA Community (group suggestions)
+  • ANDA Tools (toolkit recommendations)
+  • ANDA Advocacy (aggregate anonymized data)
+     ↓
+User gets:
+  • Personalized recommendations
+  • Local practitioner matches
+  • Support communities
+  • Curated tools
+  • Educational resources
+
+
+3. DATABASE SCHEMA RELATIONSHIPS
+════════════════════════════════
+
+┌──────────────────┐
+│   auth.users     │
+│  (Supabase Auth) │
+└────────┬─────────┘
+         │
+         ├─→ profiles (user info)
+         │
+         ├─→ user_profiles (multiple profiles per user)
+         │    │
+         │    ├─→ assessments (history of assessments)
+         │    │    │
+         │    │    ├─→ assessment_results (domain scores)
+         │    │    │
+         │    │    ├─→ follow_up_assessments (tracking)
+         │    │    │
+         │    │    ├─→ assessment_quality_metrics
+         │    │    │
+         │    │    └─→ assessment_exports (sharing)
+         │    │
+         │    ├─→ appointments (healthcare provider bookings)
+         │    │
+         │    └─→ assessment_drafts (in-progress saves)
+         │
+         ├─→ assessment_comparisons
+         │
+         └─→ organizations (institutional users)
+              │
+              └─→ enrollment
+                 │
+                 └─→ bulk_enrollment
+
+
+4. PHASE DELIVERY STRUCTURE
+════════════════════════════
+
+DATABASE MIGRATIONS:
+  scripts/001-... (existing, base schema)
+  scripts/002-assessment-features.sql ✅ DELIVERED
+  scripts/003-analytics-events.sql ✅ DELIVERED
+  scripts/004-i18n-tables.sql (Phase 4)
+  scripts/005-email-tracking.sql (Phase 5)
+  scripts/006-admin-audit.sql (Phase 6)
+  scripts/007-anda-integration.sql (Phase 7)
+
+SERVICE LAYER:
+  lib/assessment-features.ts ✅ SPEC DELIVERED
+  lib/services/analytics.ts ✅ SPEC DELIVERED
+  lib/services/email.ts (Phase 5)
+  lib/services/admin.ts (Phase 6)
+  lib/services/anda-integration.ts (Phase 7)
+
+COMPONENTS:
+  components/assessment/resume-modal.tsx ✅ SPEC DELIVERED
+  components/assessment/comparison-view.tsx ✅ SPEC DELIVERED
+  components/assessment/export-dialog.tsx ✅ SPEC DELIVERED
+  components/analytics/funnel-chart.tsx ✅ SPEC DELIVERED
+  (All other component specs delivered)
+
+API ROUTES:
+  app/api/assessment/* ✅ SPEC DELIVERED
+  app/api/analytics/* ✅ SPEC DELIVERED
+  app/api/admin/* (Phase 6)
+  app/api/anda/* (Phase 7)
+
+PAGES:
+  app/dashboard/* (enhanced in Phase 5)
+  app/admin/* (Phase 6)
+  app/assessment/* (Phase 2 enhancements)
+
+
+5. TESTING STRATEGY
+═══════════════════
+
+UNIT TESTS:
+  ├─ Assessment feature functions
+  ├─ Analytics calculation functions
+  ├─ Data validation functions
+  └─ Utility functions
+
+INTEGRATION TESTS:
+  ├─ Database operations
+  ├─ API endpoints
+  ├─ Service layer logic
+  └─ Authentication flows
+
+E2E TESTS:
+  ├─ Complete assessment flow (save/resume)
+  ├─ Comparison workflow
+  ├─ Export generation
+  ├─ Analytics tracking accuracy
+  └─ Admin operations
+
+ACCESSIBILITY TESTS:
+  ├─ WCAG 2.1 AA compliance
+  ├─ Keyboard navigation
+  ├─ Screen reader compatibility
+  ├─ Color contrast ratios
+  └─ Focus management
+
+
+6. DEPLOYMENT ARCHITECTURE
+═══════════════════════════
+
+┌─────────────────────────────────────┐
+│     Frontend (Next.js App)          │
+│  ├─ App Router                      │
+│  ├─ Server Components (RSC)         │
+│  ├─ Client Components (React)       │
+│  ├─ API Routes                      │
+│  └─ Static Assets                   │
+└────────────┬────────────────────────┘
+             │
+             ↓ (Vercel Deployment)
+             
+┌─────────────────────────────────────┐
+│  Backend Services                   │
+│  ├─ Supabase PostgreSQL DB          │
+│  ├─ Auth (Supabase Auth)            │
+│  ├─ Storage (Vercel Blob/S3)        │
+│  ├─ Email Service (Resend/SendGrid) │
+│  └─ Analytics (PostHog/Mixpanel)    │
+└────────────┬────────────────────────┘
+             │
+             ↓ (External APIs)
+             
+┌─────────────────────────────────────┐
+│  External Services                  │
+│  ├─ PDF Generation (jsPDF)          │
+│  ├─ Email Delivery                  │
+│  ├─ Analytics & Monitoring          │
+│  └─ Error Tracking (Sentry)         │
+└─────────────────────────────────────┘
+
+
+7. SECURITY ARCHITECTURE
+═════════════════════════
+
+┌─────────────────────────────────────┐
+│       NETWORK LAYER                 │
+│  ├─ HTTPS/TLS encryption            │
+│  ├─ CORS headers                    │
+│  └─ DDoS protection (Vercel)        │
+└────────────┬────────────────────────┘
+             ↓
+┌─────────────────────────────────────┐
+│    APPLICATION LAYER                │
+│  ├─ CSRF tokens                     │
+│  ├─ Rate limiting                   │
+│  ├─ Input validation                │
+│  └─ XSS protection                  │
+└────────────┬────────────────────────┘
+             ↓
+┌─────────────────────────────────────┐
+│    AUTHENTICATION LAYER             │
+│  ├─ Supabase Auth                   │
+│  ├─ JWT tokens                      │
+│  ├─ Session management              │
+│  └─ OAuth2 support                  │
+└────────────┬────────────────────────┘
+             ↓
+┌─────────────────────────────────────┐
+│    DATABASE LAYER                   │
+│  ├─ Row Level Security (RLS)        │
+│  ├─ Column encryption               │
+│  ├─ Access logging                  │
+│  └─ Data retention policies         │
+└─────────────────────────────────────┘
+
+
+8. PERFORMANCE OPTIMIZATION
+═════════════════════════════
+
+CLIENT-SIDE:
+  ├─ Code splitting by route
+  ├─ Image optimization (WebP, responsive)
+  ├─ Lazy loading of components
+  ├─ CSS extraction to separate files
+  ├─ JavaScript minification
+  └─ Caching strategies
+
+SERVER-SIDE:
+  ├─ Database query optimization
+  ├─ Connection pooling
+  ├─ Caching with Redis (optional)
+  ├─ API response compression
+  └─ Server-side rendering where needed
+
+METRICS TARGETS:
+  ├─ LCP (Largest Contentful Paint): <2.5s
+  ├─ FID (First Input Delay): <100ms
+  ├─ CLS (Cumulative Layout Shift): <0.1
+  ├─ Lighthouse Score: >95
+  └─ TTFB (Time to First Byte): <600ms
+
+
+9. MONITORING & OBSERVABILITY
+══════════════════════════════
+
+LOGGING:
+  ├─ Application logs (errors, warnings, info)
+  ├─ API request logs
+  ├─ Database query logs
+  └─ Authentication logs
+
+MONITORING:
+  ├─ Uptime monitoring
+  ├─ Error rate tracking
+  ├─ Response time monitoring
+  ├─ Database health checks
+  └─ User analytics
+
+ALERTS:
+  ├─ High error rates (>1%)
+  ├─ Slow API response (>5s)
+  ├─ Database down
+  ├─ Authentication failures
+  └─ Security events
+
+
+10. ROADMAP VISUALIZATION
+════════════════════════════
+
+MONTH 1 (Weeks 1-4):
+Week 1-2: Phase 1 Design ✅ COMPLETE
+Week 3-4: Phase 2 Assessment Features (Building)
+
+MONTH 2 (Weeks 5-9):
+Week 5-6.5: Phase 3 Analytics
+Week 7-8: Phase 4 Internationalization
+Week 9: Phase 5 Start (Parallel)
+
+MONTH 3 (Weeks 10-14):
+Week 10-11: Phase 5 Profiles & Email
+Week 12-13: Phase 6 Admin & Security
+Week 14: Phase 7 ANDA Integration
+
+MONTH 4+ (Weeks 15-29):
+ANDA ECOSYSTEM PARALLEL BUILD
+├─ Directory (Weeks 15-23)
+├─ Learning (Weeks 15-27)
+├─ Community (Weeks 15-21)
+└─ Tools (Weeks 15-19)
+
+═══════════════════════════════════════════════════════════════════
+
+All architecture specifications are finalized and ready for implementation.
+Documentation complete. Ready to begin Phase 2 development.

@@ -3,74 +3,87 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 3.6%;
+  /* Light mode - African earth-tone inspired */
+  --background: 30 11% 96%;
+  --foreground: 20 20% 12%;
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 3.6%;
+  --card-foreground: 20 20% 12%;
   --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 3.6%;
-  --primary: 0 0% 9%;
+  --popover-foreground: 20 20% 12%;
+  /* Primary: Deep terracotta/burnt sienna (African earth) */
+  --primary: 15 70% 42%;
   --primary-foreground: 0 0% 98%;
-  --secondary: 0 0% 96.1%;
-  --secondary-foreground: 0 0% 9%;
-  --muted: 0 0% 96.1%;
-  --muted-foreground: 0 0% 45.1%;
-  --accent: 0 0% 96.1%;
-  --accent-foreground: 0 0% 9%;
+  /* Secondary: Warm golden (African sunset) */
+  --secondary: 38 85% 54%;
+  --secondary-foreground: 20 20% 12%;
+  /* Muted: Soft beige */
+  --muted: 30 20% 88%;
+  --muted-foreground: 20 15% 45%;
+  /* Accent: Deep teal/forest (African nature) */
+  --accent: 165 75% 35%;
+  --accent-foreground: 0 0% 98%;
+  /* Error states */
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 89.8%;
-  --input: 0 0% 89.8%;
-  --ring: 0 0% 3.6%;
-  --chart-1: 12 76% 61%;
-  --chart-2: 173 58% 39%;
-  --chart-3: 197 37% 24%;
-  --chart-4: 43 74% 66%;
-  --chart-5: 27 87% 67%;
+  /* UI elements */
+  --border: 30 15% 88%;
+  --input: 30 15% 92%;
+  --ring: 15 70% 42%;
+  /* Charts (warm, accessible palette) */
+  --chart-1: 15 70% 42%;
+  --chart-2: 38 85% 54%;
+  --chart-3: 165 75% 35%;
+  --chart-4: 45 90% 50%;
+  --chart-5: 10 80% 52%;
   --radius: 0.5rem;
-  --sidebar: 0 0% 98%;
-  --sidebar-foreground: 0 0% 3.6%;
-  --sidebar-primary: 0 0% 9%;
+  /* Sidebar */
+  --sidebar: 30 11% 96%;
+  --sidebar-foreground: 20 20% 12%;
+  --sidebar-primary: 15 70% 42%;
   --sidebar-primary-foreground: 0 0% 98%;
-  --sidebar-accent: 0 0% 96.1%;
-  --sidebar-accent-foreground: 0 0% 9%;
-  --sidebar-border: 0 0% 89.8%;
-  --sidebar-ring: 0 0% 3.6%;
+  --sidebar-accent: 38 85% 54%;
+  --sidebar-accent-foreground: 20 20% 12%;
+  --sidebar-border: 30 15% 88%;
+  --sidebar-ring: 15 70% 42%;
 }
 
 .dark {
-  --background: 0 0% 3.6%;
-  --foreground: 0 0% 98%;
-  --card: 0 0% 3.6%;
-  --card-foreground: 0 0% 98%;
-  --popover: 0 0% 3.6%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 0 0% 98%;
-  --primary-foreground: 0 0% 9%;
-  --secondary: 0 0% 14.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 0 0% 14.9%;
-  --muted-foreground: 0 0% 63.9%;
-  --accent: 0 0% 14.9%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 30.6%;
+  --background: 20 15% 10%;
+  --foreground: 30 10% 92%;
+  --card: 20 15% 15%;
+  --card-foreground: 30 10% 92%;
+  --popover: 20 15% 15%;
+  --popover-foreground: 30 10% 92%;
+  /* Primary: Lighter terracotta for dark mode */
+  --primary: 15 70% 55%;
+  --primary-foreground: 20 15% 10%;
+  /* Secondary: Bright golden for contrast */
+  --secondary: 38 85% 60%;
+  --secondary-foreground: 20 15% 10%;
+  --muted: 20 15% 28%;
+  --muted-foreground: 30 10% 65%;
+  /* Accent: Bright teal */
+  --accent: 165 75% 45%;
+  --accent-foreground: 20 15% 10%;
+  --destructive: 0 62.8% 40%;
   --destructive-foreground: 0 85.7% 97.3%;
-  --border: 0 0% 14.9%;
-  --input: 0 0% 14.9%;
-  --ring: 0 0% 83.1%;
-  --chart-1: 220 90% 56%;
-  --chart-2: 160 84% 39%;
-  --chart-3: 30 84% 62%;
-  --chart-4: 280 85% 44%;
-  --chart-5: 340 75% 55%;
-  --sidebar: 0 0% 9%;
-  --sidebar-foreground: 0 0% 98%;
-  --sidebar-primary: 0 0% 98%;
-  --sidebar-primary-foreground: 0 0% 9%;
-  --sidebar-accent: 0 0% 14.9%;
-  --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-border: 0 0% 14.9%;
-  --sidebar-ring: 0 0% 83.1%;
+  --border: 20 15% 25%;
+  --input: 20 15% 20%;
+  --ring: 15 70% 55%;
+  /* Charts - vibrant for dark backgrounds */
+  --chart-1: 15 70% 55%;
+  --chart-2: 38 85% 60%;
+  --chart-3: 165 75% 45%;
+  --chart-4: 45 90% 60%;
+  --chart-5: 10 80% 60%;
+  --sidebar: 20 15% 12%;
+  --sidebar-foreground: 30 10% 92%;
+  --sidebar-primary: 15 70% 55%;
+  --sidebar-primary-foreground: 20 15% 10%;
+  --sidebar-accent: 38 85% 60%;
+  --sidebar-accent-foreground: 20 15% 10%;
+  --sidebar-border: 20 15% 25%;
+  --sidebar-ring: 15 70% 55%;
 }
 
 
@@ -78,7 +91,98 @@
 @layer base {
   * {
     border-color: hsl(var(--border));
+    outline-color: hsl(var(--ring) / 0.5);
   }
+  
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  /* Dyslexia-friendly typography mode */
+  [data-dyslexia-friendly="true"] {
+    font-family: "OpenDyslexic", "Opendyslexic3", "DejaVu Sans Mono", monospace;
+    letter-spacing: 0.15em;
+    word-spacing: 0.2em;
+    line-height: 1.8;
+  }
+
+  /* High contrast mode */
+  [data-high-contrast="true"] {
+    --foreground: 0 0% 0%;
+    --background: 0 0% 100%;
+    --border: 0 0% 0%;
+    --ring: 0 0% 0%;
+  }
+
+  /* Reduce motion for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Focus mode - minimal distractions */
+  [data-focus-mode="true"] nav,
+  [data-focus-mode="true"] aside,
+  [data-focus-mode="true"] .sidebar {
+    display: none;
+  }
+
+  /* Font sizing scale (8px - 24px) */
+  html {
+    --font-size: 16px;
+  }
+
+  [data-text-scale="0.5"] {
+    --font-size: 8px;
+  }
+  [data-text-scale="0.75"] {
+    --font-size: 12px;
+  }
+  [data-text-scale="1"] {
+    --font-size: 16px;
+  }
+  [data-text-scale="1.25"] {
+    --font-size: 20px;
+  }
+  [data-text-scale="1.5"] {
+    --font-size: 24px;
+  }
+
+  body[data-text-scale] {
+    font-size: var(--font-size);
+  }
+
+  /* Keyboard focus styles */
+  :focus-visible {
+    outline: 3px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Skip to main content link */
+  .skip-to-main {
+    position: absolute;
+    left: -9999px;
+    z-index: 999;
+    padding: 1em;
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    text-decoration: none;
+    border-radius: 0 0 4px 0;
+  }
+
+  .skip-to-main:focus {
+    left: 0;
+    top: 0;
+  }
+}
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));

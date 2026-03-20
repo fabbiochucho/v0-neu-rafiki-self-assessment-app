@@ -1,0 +1,437 @@
+ANDA ECOSYSTEM COMPLETE ROADMAP
+================================
+
+ORGANIZATIONAL STRUCTURE:
+
+┌─────────────────────────────────────────────────────────┐
+│  ANDA (African Neurodiversity Alliance) - Umbrella Org   │
+│  Mission: Pan-African neurodiversity awareness, support  │
+│  Coverage: 54 countries, 1000+ members                   │
+└────────────┬────────────────────────────────────────────┘
+             │
+    ┌────────┴────────────────────────────┐
+    │                                     │
+    ▼                                     ▼
+NeuRafiki                         ANDA Ecosystem
+(Assessment Tool)                 (4 Supporting Platforms)
+LIVE ✅                           SPECIFICATIONS READY
+
+─────────────────────────────────────────────────────────────
+
+NEURAFIKI - THE ASSESSMENT PLATFORM
+(Currently Live - Under Enhancement)
+=====================================
+
+STATUS: Active
+LAUNCH: Already live
+USERS: Growing
+PURPOSE: Self-test, profile assessment, progress tracking
+
+CURRENT FEATURES:
+✅ Multi-profile assessments
+✅ Domain-based screening (Autism, ADHD, Sensory, etc.)
+✅ Baseline and follow-up assessments
+✅ Basic reporting
+✅ User dashboards
+✅ Appointment tracking
+✅ Follow-up scheduling
+
+ENHANCEMENTS IN PROGRESS (12 weeks):
+Phase 1: ✅ Design System & Accessibility (COMPLETE)
+Phase 2: Assessment Features (Save/Resume, Export)
+Phase 3: Analytics & Measurement
+Phase 4: Internationalization (6 languages)
+Phase 5: User Profiles & Email
+Phase 6: Admin Dashboard & Security
+Phase 7: ANDA Integration Hub
+
+TOTAL: Growing from MVP to fully-featured platform
+
+─────────────────────────────────────────────────────────────
+
+ANDA ECOSYSTEM - 4 NEW PLATFORMS
+(To be built after NeuRafiki enhancements)
+============================================
+
+Platform 1: ANDA DIRECTORY
+=====================================================
+SCOPE: Resource discovery platform
+TIMELINE: 8-10 weeks (start: Week 13 of project)
+STATUS: Specifications ready
+
+WHAT IT DOES:
+- Searchable database of 1000+ practitioners (Doctors, therapists, educators)
+- Location-based search (by country, city)
+- Specialization filtering (ADHD, Autism, Dyslexia, Dyspraxia)
+- Practitioner verification system (blue badges)
+- Community reviews & ratings
+- Appointment booking integration
+- Support group directory
+- Organization listings (NGOs, schools, advocacy groups)
+
+HOW IT CONNECTS TO NEURAFIKI:
+After user completes assessment:
+  "Found a specialist? Book an appointment"
+  Links to local ANDA Directory practitioners
+  Auto-filtered by profile type & location
+
+FEATURES:
+- Map view of practitioners
+- Filter by: country, city, specialization, language, cost
+- Verified professional badges
+- User reviews and ratings
+- Direct booking links
+- Support group finder
+- Community resources
+- Feedback system
+
+DATA STRUCTURE:
+- Practitioners table (name, credentials, location, specialization, languages)
+- Organizations table (NGOs, schools, advocacy groups)
+- Support Groups table (online/in-person, schedule, topic)
+- Ratings/Reviews table (user feedback)
+- Verification logs (admin tracking)
+
+BUDGET ESTIMATE: $40-60K (development + content curation)
+TEAM: 2-3 developers, 1 content curator, 1 community manager
+
+─────────────────────────────────────────────────────────────
+
+Platform 2: ANDA LEARNING PLATFORM
+=====================================================
+SCOPE: Online education and self-paced courses
+TIMELINE: 12-14 weeks (start: Week 13 of project)
+STATUS: Specifications ready
+
+WHAT IT DOES:
+- Self-directed courses for:
+  * "So you think you have ADHD?" (self-diagnosed individuals)
+  * "Parenting a Neurodivergent Child" (parents)
+  * "Understanding Neurodiversity in the Classroom" (educators)
+  * "Culturally-Competent Assessment" (professionals)
+- Video lessons with captions & transcripts
+- Interactive quizzes
+- Downloadable materials
+- Community forums
+- Certificate of completion
+- Personalized learning paths (based on NeuRafiki results)
+
+HOW IT CONNECTS TO NEURAFIKI:
+After assessment, dashboard shows:
+  "Recommended Courses for Your Profile"
+  Links to relevant ANDA Learning courses
+  Auto-recommends based on assessment results
+
+COURSE LIBRARY:
+- 50+ courses
+- 200+ hours of content
+- 6+ languages
+- Culturally adapted for each region
+- By age group (child, teen, adult, parent)
+- By topic (diagnosis, school, work, relationships)
+
+BUDGET ESTIMATE: $60-80K (content creation, video production, hosting)
+TEAM: 2-3 developers, 3-5 content creators, 1 video editor
+
+─────────────────────────────────────────────────────────────
+
+Platform 3: ANDA COMMUNITY FORUM
+=====================================================
+SCOPE: Peer support and knowledge sharing
+TIMELINE: 6-8 weeks (start: Week 13 of project)
+STATUS: Specifications ready
+
+WHAT IT DOES:
+- Topic-based forums:
+  * By neurodivergent type (ADHD, Autism, Dyslexia, etc.)
+  * By life stage (child, teen, adult, parent)
+  * By country/region
+  * By topic (diagnosis, school, work, relationships)
+- User profiles with reputation system
+- Community badges (verified professional, helpful member)
+- Direct messaging
+- Accountability partners
+- Moderation & safety
+- Community guidelines
+- Report/flag system
+
+HOW IT CONNECTS TO NEURAFIKI:
+After assessment:
+  "Connect with others like you"
+  Links to relevant community forums
+  Auto-filters by profile & location
+
+FEATURES:
+- Topic moderation (community & admin)
+- Verified professional badges
+- User reputation system
+- Daily digest emails
+- Real-time notifications
+- Search & tagging
+- Direct messaging
+- Accountability partners
+- Mentorship matching
+
+TECH STACK: Discourse or custom forum build
+BUDGET ESTIMATE: $30-40K (setup, customization, moderation)
+TEAM: 1-2 developers, 2-3 community moderators
+
+─────────────────────────────────────────────────────────────
+
+Platform 4: ANDA TOOLS REPOSITORY
+=====================================================
+SCOPE: Curated tools & resources for neurodivergent individuals
+TIMELINE: 4-6 weeks (start: Week 13 of project)
+STATUS: Specifications ready
+
+WHAT IT DOES:
+- Database of 500+ tools (apps, services, strategies)
+- Categories:
+  * Productivity apps (Todoist, Notion, Forest)
+  * Meditation & mindfulness
+  * Time management tools
+  * Learning tools
+  * Sensory tools
+  * Social support tools
+- Filtersby: platform (iOS, Android, web), cost, language, accessibility
+- Community reviews & ratings
+- ANDA stamp of approval (vetted for accessibility)
+- Customized toolkits by profile
+- Setup guides with screenshots
+
+HOW IT CONNECTS TO NEURAFIKI:
+After assessment:
+  "Build Your Toolkit"
+  Auto-recommended tools based on profile
+  Links to ANDA-vetted app suggestions
+  Setup guides for each tool
+
+FEATURES:
+- Tool database with reviews
+- User ratings & feedback
+- Pre-built toolkits (e.g., "ADHD Starter Kit")
+- Setup video tutorials
+- Comparison tools (Tool A vs Tool B)
+- Downloadable workbooks
+- Coping strategy templates
+- Goal-setting worksheets
+
+BUDGET ESTIMATE: $20-30K (content curation, setup guides)
+TEAM: 1 developer, 1-2 content curators
+
+─────────────────────────────────────────────────────────────
+
+PHASE 5: ANDA ADVOCACY & RESEARCH HUB
+(Future, not immediate)
+=====================================================
+SCOPE: Policy tracking, research, advocacy tools
+TIMELINE: 6-8 weeks (start: Month 6 of project)
+STATUS: Specifications ready
+
+WHAT IT DOES:
+- Policy tracker for 54 countries
+- Research library & summaries
+- Advocacy toolkit (templates, guides)
+- Success stories & impact metrics
+- Media center (photos, videos)
+- Data dashboard (anonymized NeuRafiki data)
+
+BUDGET ESTIMATE: $40-50K
+
+─────────────────────────────────────────────────────────────
+
+DATA FLOW: HOW IT ALL CONNECTS
+===============================
+
+1. USER JOURNEY:
+
+User lands on ANDA.org
+    ↓
+Chooses: "Take NeuRafiki Assessment"
+    ↓
+Complete profile selection
+    ↓
+Take assessment (8-20 minutes)
+    ↓
+Get personalized results showing:
+  - Profile score (Autism 78%, ADHD 65%, etc.)
+  - Interpretation ("You may have features of...")
+  - Recommended next steps
+    ↓
+See recommendations from ANDA ecosystem:
+  ✓ "Recommended Courses" (ANDA Learning)
+  ✓ "Specialists in Your Area" (ANDA Directory)
+  ✓ "Join Support Groups" (ANDA Community)
+  ✓ "Tools for Your Profile" (ANDA Tools)
+  ✓ "Resources on Diagnosis" (ANDA Resources)
+    ↓
+User can:
+  - Take a course
+  - Book specialist appointment
+  - Join community forum
+  - Download toolkit
+  - Read articles
+
+2. DATA SHARING:
+
+NeuRafiki collects:
+- Assessment profiles (ADHD, Autism, Dyslexia, etc.)
+- User location (country)
+- User language
+- Age group
+- Responses to 800+ questions
+- Completion time & patterns
+
+This data feeds:
+- ANDA Directory (practitioner recommendations)
+- ANDA Learning (course recommendations)
+- ANDA Community (group suggestions)
+- ANDA Tools (toolkit recommendations)
+- ANDA Advocacy (aggregate anonymized data for policy work)
+
+3. BENEFITS TO ECOSYSTEM:
+
+NeuRafiki → ANDA Components:
+- Real data on neurodiversity prevalence
+- User feedback on resources
+- Geographic hotspots for support
+- Language preferences
+- Age-specific needs
+
+ANDA Components → NeuRafiki:
+- Practitioner expertise
+- Course content
+- Community stories
+- Tools validation
+- Policy insights
+
+─────────────────────────────────────────────────────────────
+
+PROJECT TIMELINE: COMPLETE ECOSYSTEM
+=====================================
+
+PHASE 1 (Week 1-8): NeuRafiki Design & Accessibility
+✅ COMPLETE
+
+PHASE 2 (Week 9-10): NeuRafiki Assessment Features
+Status: Ready to build
+
+PHASE 3 (Week 11-12.5): NeuRafiki Analytics & Measurement
+Status: Ready to build
+
+PHASE 4 (Week 13-14): NeuRafiki Internationalization
+Status: Ready to build
+
+PHASE 5 (Week 15-16): NeuRafiki Profiles & Email
+Status: Ready to build
+
+PHASE 6 (Week 17-18.5): NeuRafiki Admin & Security
+Status: Ready to build
+
+PHASE 7 (Week 19-20): NeuRafiki ANDA Integration Hub
+Status: Ready to build
+
+──── NEURAFIKI COMPLETE & PRODUCTION READY ────
+
+PHASE 8 (Week 21-29): ANDA DIRECTORY Platform
+Timeline: 8-10 weeks
+Status: Specifications ready
+Start: After NeuRafiki Phase 7
+
+PHASE 9 (Week 21-31): ANDA LEARNING Platform (parallel)
+Timeline: 12-14 weeks
+Status: Specifications ready
+Start: After NeuRafiki Phase 7
+
+PHASE 10 (Week 21-27): ANDA COMMUNITY Forum (parallel)
+Timeline: 6-8 weeks
+Status: Specifications ready
+Start: After NeuRafiki Phase 7
+
+PHASE 11 (Week 21-24): ANDA TOOLS Repository (parallel)
+Timeline: 4-6 weeks
+Status: Specifications ready
+Start: After NeuRafiki Phase 7
+
+──── ANDA ECOSYSTEM COMPLETE ────
+
+TOTAL PROJECT TIMELINE: 9-10 months to full ecosystem launch
+
+─────────────────────────────────────────────────────────────
+
+BUDGET SUMMARY
+==============
+
+NeuRafiki Enhancements: $80-100K (Phases 1-7)
+ANDA Directory: $40-60K
+ANDA Learning: $60-80K
+ANDA Community: $30-40K
+ANDA Tools: $20-30K
+ANDA Advocacy (Future): $40-50K
+
+TOTAL: $270-360K for complete ecosystem
+
+Per phase breakdown available in detailed roadmap documents.
+
+─────────────────────────────────────────────────────────────
+
+IMMEDIATE NEXT STEPS
+====================
+
+✅ PHASE 2 BUILD (2 weeks):
+1. Deploy database migrations (scripts/002-assessment-features.sql)
+2. Build assessment features service (lib/assessment-features.ts)
+3. Create Resume Assessment modal
+4. Create Comparison view
+5. Create Export functionality
+
+✅ PHASE 3 BUILD (1.5 weeks):
+1. Deploy analytics schema (scripts/003-analytics-events.sql)
+2. Create analytics tracking service
+3. Build admin analytics dashboard
+4. Setup conversion funnel tracking
+
+PARALLEL: Start Phase 4 planning (i18n infrastructure)
+
+─────────────────────────────────────────────────────────────
+
+KEY SUCCESS METRICS
+===================
+
+NeuRafiki Targets (Month 6):
+- 50,000+ assessments
+- 70%+ completion rate
+- WCAG AA 100% compliance
+- 6 languages live
+- <3 second page load
+- >95 Lighthouse score
+
+ANDA Ecosystem Targets (Month 12):
+- 1,000+ practitioners listed
+- 100+ courses live
+- 5,000+ active community members
+- 500+ tools reviewed
+- 20+ policy tracks
+- 100,000+ individuals in ecosystem
+
+─────────────────────────────────────────────────────────────
+
+VISION STATEMENT
+================
+
+By the end of this roadmap:
+
+NEURAFIKI = The gold-standard self-assessment platform for neurodiversity
+in Africa, trusted by 100,000+ individuals across 54 countries, providing
+culturally-adapted, accessible screening for ADHD, Autism, Dyslexia and more.
+
+ANDA ECOSYSTEM = The most comprehensive neurodiversity support system in
+Africa, connecting individuals to specialists, educators, resources,
+communities, and advocacy - turning assessment into action.
+
+NOT CHARITY. NOT THERAPY.
+But friendship, dignity, and systems change.
+
+─────────────────────────────────────────────────────────────
+
+READY FOR IMPLEMENTATION ✅
