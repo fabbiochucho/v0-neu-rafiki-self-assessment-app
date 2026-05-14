@@ -2,9 +2,19 @@
 // This allows testing the UI without actual Supabase connectivity
 
 export const isMockMode = () => {
-  if (typeof window === 'undefined') return false
-  // Enable mock mode if we detect we're in v0 preview environment
-  return window.location.hostname.includes('vusercontent.net') || process.env.NEXT_PUBLIC_MOCK_AUTH === 'true'
+  // Check if explicitly disabled
+  if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'false') return false
+  
+  // If in browser, check hostname
+  if (typeof window !== 'undefined') {
+    const isPreviewEnvironment = window.location.hostname.includes('vusercontent.net') || 
+                                 window.location.hostname.includes('localhost') ||
+                                 window.location.hostname.includes('127.0.0.1')
+    return isPreviewEnvironment || process.env.NEXT_PUBLIC_MOCK_AUTH === 'true'
+  }
+  
+  // Server-side: check environment variable or default to true for non-production
+  return process.env.NEXT_PUBLIC_MOCK_AUTH === 'true' || process.env.NODE_ENV !== 'production'
 }
 
 export async function mockSignUp(email: string, password: string) {

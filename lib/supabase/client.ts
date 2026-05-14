@@ -14,12 +14,5 @@ export function createClient() {
     );
   }
 
-  try {
-    const client = createBrowserClient(supabaseUrl, supabaseAnonKey);
-    console.log("[v0] Supabase client initialized successfully");
-    return client;
-  } catch (error) {
-    console.error("[v0] Failed to create Supabase client:", error);
-    throw error;
-  }
+  return createBrowserClient(supabaseUrl, supabaseAnonKey);
 }

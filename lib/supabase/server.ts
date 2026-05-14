@@ -8,8 +8,25 @@ import { cookies } from "next/headers"
  */
 export async function createClient() {
   const cookieStore = await cookies()
+  
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+  // Validate Supabase credentials
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error(
+      "[v0] Supabase credentials missing. Check your environment variables:",
+      {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseAnonKey,
+      }
+    )
+    throw new Error(
+      "Supabase configuration is missing. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables."
+    )
+  }
+
+  return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll()
