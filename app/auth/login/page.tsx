@@ -10,14 +10,17 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { Heart } from "lucide-react"
+import { Heart, Zap } from "lucide-react"
+import { getAllDemoUsers } from "@/lib/demo-test-users"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [showDemoAccounts, setShowDemoAccounts] = useState(false)
   const router = useRouter()
+  const demoUsers = getAllDemoUsers()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,6 +62,23 @@ export default function LoginPage() {
       }
 
       setError(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleQuickLoginDemo = async (demoEmail: string, demoPassword: string) => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      console.log("[v0] Quick demo login for:", demoEmail)
+      await mockSignIn(demoEmail, demoPassword)
+      console.log("[v0] Demo login successful")
+      router.push("/dashboard")
+    } catch (error: unknown) {
+      console.error("[v0] Demo login error:", error)
+      setError(error instanceof Error ? error.message : "Demo login failed")
     } finally {
       setIsLoading(false)
     }
@@ -117,6 +137,60 @@ export default function LoginPage() {
                     {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
                 </div>
+
+                {/* Demo Users Section */}
+                <div className="mt-6 border-t pt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowDemoAccounts(!showDemoAccounts)}
+                    className="w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Zap className="h-4 w-4" />
+                    {showDemoAccounts ? "Hide Demo Accounts" : "Try Demo Accounts"}
+                  </button>
+
+                  {showDemoAccounts && (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-xs text-muted-foreground text-center mb-3">
+                        Quick access for testing different user types
+                      </p>
+                      {demoUsers.map((demoUser) => (
+                        <Button
+                          key={demoUser.id}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full text-left justify-start"
+                          onClick={() =>
+                            handleQuickLoginDemo(demoUser.email, demoUser.password)
+                          }
+                          disabled={isLoading}
+                        >
+                          <div className="flex flex-col items-start w-full">
+                            <span className="font-medium text-xs">
+                              {demoUser.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {demoUser.role === "health_professional"
+                                ? "Health Professional"
+                                : demoUser.role
+                                    .replace(/_/g, " ")
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                  demoUser.role
+                                    .replace(/_/g, " ")
+                                    .slice(1)}
+                            </span>
+                          </div>
+                        </Button>
+                      ))}
+                      <p className="text-xs text-muted-foreground text-center pt-2">
+                        All demo accounts use mock data
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="mt-6 text-center text-sm">
                   Don&apos;t have an account?{" "}
                   <Link href="/auth/sign-up" className="text-primary hover:underline font-medium">

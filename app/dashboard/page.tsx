@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Heart, Plus, Users, BarChart3, Calendar } from "lucide-react"
+import { DemoBadge } from "@/components/demo-badge"
+import { getMockUser } from "@/lib/auth-mock"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -71,6 +73,13 @@ export default async function DashboardPage() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Demo Mode Banner */}
+        {getMockUser() && (
+          <div className="mb-6">
+            <DemoBadge variant="banner" />
+          </div>
+        )}
+
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Welcome back, {profile?.full_name || "User"}!</h1>
