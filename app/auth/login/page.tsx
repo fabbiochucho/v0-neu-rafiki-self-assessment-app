@@ -28,15 +28,10 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      console.log("[v0] Login attempt with email:", email)
-
       // Use mock auth in preview environment, real auth in production
       if (isMockMode()) {
-        console.log("[v0] Using mock authentication for preview")
         await mockSignIn(email, password)
-        console.log("[v0] Mock login successful")
       } else {
-        console.log("[v0] Using real Supabase authentication")
         const supabase = createClient()
 
         const { error, data } = await supabase.auth.signInWithPassword({
@@ -47,14 +42,11 @@ export default function LoginPage() {
         if (error) {
           throw new Error(error.message || "Authentication failed")
         }
-
-        console.log("[v0] Supabase login successful")
       }
 
-      console.log("[v0] Login successful, redirecting to dashboard")
       router.push("/dashboard")
     } catch (error: unknown) {
-      console.error("[v0] Login error:", error)
+      console.error("Login error:", error)
       let errorMessage = "An error occurred during login"
 
       if (error instanceof Error) {
@@ -72,12 +64,10 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      console.log("[v0] Quick demo login for:", demoEmail)
       await mockSignIn(demoEmail, demoPassword)
-      console.log("[v0] Demo login successful")
       router.push("/dashboard")
     } catch (error: unknown) {
-      console.error("[v0] Demo login error:", error)
+      console.error("Demo login error:", error)
       setError(error instanceof Error ? error.message : "Demo login failed")
     } finally {
       setIsLoading(false)

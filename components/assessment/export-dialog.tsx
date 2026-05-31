@@ -20,16 +20,15 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import type { AssessmentResult } from '@/lib/types/assessment'
 
 interface ExportDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  assessment: AssessmentResult
+  assessmentId: string
+  assessmentType: string
 }
 
 export function ExportDialog({
-  open,
-  onOpenChange,
-  assessment,
+  assessmentId,
+  assessmentType,
 }: ExportDialogProps) {
+  const [open, setOpen] = useState(false)
   const [format, setFormat] = useState<'pdf' | 'json'>('pdf')
   const [includeInterpretation, setIncludeInterpretation] = useState(true)
   const [shareableLink, setShareableLink] = useState(false)
@@ -37,15 +36,17 @@ export function ExportDialog({
   const [exported, setExported] = useState(false)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleExport = async () => {
     try {
       setLoading(true)
+      setError(null)
       const response = await fetch('/api/assessment/export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          assessmentId: assessment.id,
+          assessmentId,
           format,
           includeInterpretation,
           shareableLink,
@@ -62,21 +63,25 @@ export function ExportDialog({
         setShareUrl(data.downloadUrl)
       } else if (format === 'pdf') {
         // Trigger download
-        window.location.href = data.downloadUrl
+        if (data.downloadUrl) {
+          window.location.href = data.downloadUrl
+        }
       } else {
-        // For JSON, trigger download
-        const blob = new Blob([JSON.stringify(assessment, null, 2)], {
+        // For JSON, trigger download with filename
+        const blob = new Blob([JSON.stringify(data, null, 2)], {
           type: 'application/json',
         })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `assessment-${assessment.assessment_type}-${Date.now()}.json`
+        a.download = `assessment-${assessmentType}-${Date.now()}.json`
         a.click()
         URL.revokeObjectURL(url)
       }
-    } catch (error) {
-      console.error('Export failed:', error)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Export failed'
+      setError(message)
+      console.error('Export error:', err)
     } finally {
       setLoading(false)
     }
@@ -263,7 +268,7 @@ export function ExportDialog({
             </div>
           </div>
         )}
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   )
-}

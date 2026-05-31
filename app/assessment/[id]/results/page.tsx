@@ -142,10 +142,7 @@ export default async function AssessmentResultsPage({ params }: AssessmentResult
                 <span className="text-xl font-bold text-foreground">NeuRafiki</span>
               </div>
             </div>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export Report
-            </Button>
+
           </div>
         </div>
       </header>
@@ -168,18 +165,18 @@ export default async function AssessmentResultsPage({ params }: AssessmentResult
           <div className="space-y-4 mb-6">
             <div className="flex flex-wrap gap-2">
               <ExportDialog assessmentId={id} assessmentType={assessment.assessment_type} />
-              <Link href={`/assessment/${id}/compare`}>
-                <Button variant="outline" className="gap-2">
+              <Button variant="outline" className="gap-2" asChild>
+                <Link href={`/assessment/${id}/compare`}>
                   <Share2 className="h-4 w-4" />
                   Compare Assessments
-                </Button>
-              </Link>
-              <Link href="/dashboard">
-                <Button variant="outline" className="gap-2">
+                </Link>
+              </Button>
+              <Button variant="outline" className="gap-2" asChild>
+                <Link href="/dashboard">
                   <ArrowLeft className="h-4 w-4" />
                   Back to Dashboard
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </div>
 

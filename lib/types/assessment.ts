@@ -99,6 +99,74 @@ export interface ExtendedProfile extends Profile {
 
 type Assessment = {}
 
+// Phase 2: Save/Resume Features
+export interface AssessmentDraft {
+  id: string
+  user_id: string
+  assessment_id: string
+  assessment_type: string
+  respondent_type: "self" | "parent" | "teacher" | "caregiver"
+  profile_id: string
+  current_question_index: number
+  total_questions: number
+  responses: Record<string, number | string>
+  progress: number // 0-100 percentage
+  started_at: string
+  last_saved_at: string
+  expires_at: string
+  metadata?: Record<string, any>
+  created_at: string
+  updated_at: string
+}
+
+// Phase 2: Comparison Features
+export interface AssessmentComparison {
+  id: string
+  user_id: string
+  assessment_id_1: string
+  assessment_id_2: string
+  created_date_1: string
+  created_date_2: string
+  score_difference: Record<string, number>
+  trend: "improving" | "declining" | "stable"
+  insights: string[]
+  created_at: string
+  updated_at: string
+}
+
+// Phase 2: Export Features
+export interface AssessmentExport {
+  id: string
+  user_id: string
+  assessment_id: string
+  format: "pdf" | "json"
+  file_url: string
+  file_size: number
+  download_count: number
+  shareable_link?: string
+  is_public: boolean
+  expires_at?: string
+  created_at: string
+  updated_at: string
+}
+
+// Phase 3: Analytics
+export interface AnalyticsEvent {
+  id: string
+  user_id?: string
+  session_id: string
+  event_type: string
+  event_category: string
+  event_value?: number
+  event_properties: Record<string, any>
+  page_url: string
+  referrer_url?: string
+  user_country?: string
+  user_language?: string
+  timestamp: string
+  created_at: string
+}
+
 export interface ExtendedAssessment extends Assessment {
   organization_id?: string
 }

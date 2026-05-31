@@ -79,11 +79,8 @@ export default function SignUpPage() {
 
       // Use mock auth in preview environment, real auth in production
       if (isMockMode()) {
-        console.log("[v0] Using mock authentication for preview");
         await mockSignUp(email, password);
-        console.log("[v0] Mock sign-up successful");
       } else {
-        console.log("[v0] Using real Supabase authentication");
         const supabase = createClient();
 
         const { error } = await supabase.auth.signUp({
@@ -101,12 +98,11 @@ export default function SignUpPage() {
         });
 
         if (error) throw error;
-        console.log("[v0] Supabase sign-up successful");
       }
 
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
-      console.error("[v0] Sign-up error:", error);
+      console.error("Sign-up error:", error);
       if (error instanceof Error) {
         setError(error.message);
       } else {

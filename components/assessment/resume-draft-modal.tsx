@@ -14,26 +14,23 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import type { AssessmentDraft } from '@/lib/types/assessment'
 
 interface ResumeDraftModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onResume: (draft: AssessmentDraft) => void
+  userId: string
 }
 
 export function ResumeDraftModal({
-  open,
-  onOpenChange,
-  onResume,
+  userId,
 }: ResumeDraftModalProps) {
+  const [open, setOpen] = useState(false)
   const [drafts, setDrafts] = useState<AssessmentDraft[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
 
   useEffect(() => {
-    if (open) {
+    if (open && userId) {
       fetchDrafts()
     }
-  }, [open])
+  }, [open, userId])
 
   const fetchDrafts = async () => {
     try {
@@ -54,18 +51,23 @@ export function ResumeDraftModal({
     }
   }
 
-  const handleDeleteDraft = async (assessmentType: string) => {
+  const handleResumeDraft = (draft: AssessmentDraft) => {
+    // Navigate to assessment with draft ID
+    window.location.href = `/assessment/${draft.assessment_id}?draft=${draft.id}`
+  }
+
+  const handleDeleteDraft = async (draftId: string, assessmentType: string) => {
     try {
-      setDeleting(assessmentType)
+      setDeleting(draftId)
       const response = await fetch(
-        `/api/assessment/draft?type=${assessmentType}`,
+        `/api/assessment/draft?id=${draftId}`,
         { method: 'DELETE' }
       )
 
       if (!response.ok) throw new Error('Failed to delete draft')
 
       setDrafts((prev) =>
-        prev.filter((d) => d.assessment_type !== assessmentType)
+        prev.filter((d) => d.id !== draftId)
       )
     } catch (err) {
       setError(
@@ -92,7 +94,21 @@ export function ResumeDraftModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+      {drafts.length > 0 && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-900">
+            You have {drafts.length} saved assessment{drafts.length !== 1 ? 's' : ''}.
+            <button
+              onClick={() => setOpen(true)}
+              className="ml-2 font-semibold underline hover:text-blue-700"
+            >
+              Resume one now
+            </button>
+          </p>
+        </div>
+      )}
+      <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Resume Assessment</DialogTitle>
@@ -186,7 +202,7 @@ export function ResumeDraftModal({
             })}
           </div>
         )}
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   )
-}
