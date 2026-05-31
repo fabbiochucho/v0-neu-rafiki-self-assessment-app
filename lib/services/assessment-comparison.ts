@@ -14,14 +14,25 @@ export interface ComparisonData {
 }
 
 export class AssessmentComparisonService {
-  private supabase = createClient()
+  private supabasePromise: ReturnType<typeof createClient> | null = null
+
+  /**
+   * Get or create Supabase client
+   */
+  private async getClient() {
+    if (!this.supabasePromise) {
+      this.supabasePromise = createClient()
+    }
+    return this.supabasePromise
+  }
 
   /**
    * Create comparison between two assessments
    */
   async createComparison(data: ComparisonData): Promise<AssessmentComparison> {
     // Verify both assessments belong to user
-    const { data: assessments, error: fetchError } = await this.supabase
+    const supabase = await this.getClient()
+    const { data: assessments, error: fetchError } = await supabase
       .from('assessment_results')
       .select('id, assessment_type, scores, created_at')
       .in('id', [data.firstAssessmentId, data.secondAssessmentId])
@@ -32,7 +43,7 @@ export class AssessmentComparisonService {
       throw new Error('Both assessments must belong to the user')
     }
 
-    const { data: comparison, error } = await this.supabase
+    const { data: comparison, error } = await supabase
       .from('assessment_comparisons')
       .insert({
         user_id: data.userId,
@@ -54,7 +65,8 @@ export class AssessmentComparisonService {
     comparisonId: string,
     userId: string
   ): Promise<AssessmentComparison & { assessments: AssessmentResult[] }> {
-    const { data: comparison, error: compError } = await this.supabase
+    const supabase = await this.getClient()
+    const { data: comparison, error: compError } = await supabase
       .from('assessment_comparisons')
       .select(
         `
@@ -79,7 +91,8 @@ export class AssessmentComparisonService {
    * List all comparisons for user
    */
   async listComparisons(userId: string): Promise<AssessmentComparison[]> {
-    const { data, error } = await this.supabase
+    const supabase = await this.getClient()
+    const { data, error } = await supabase
       .from('assessment_comparisons')
       .select(
         `

@@ -19,7 +19,17 @@ export interface EventData {
 }
 
 export class AnalyticsEventsService {
-  private supabase = createClient()
+  private supabasePromise: ReturnType<typeof createClient> | null = null
+
+  /**
+   * Get or create Supabase client
+   */
+  private async getClient() {
+    if (!this.supabasePromise) {
+      this.supabasePromise = createClient()
+    }
+    return this.supabasePromise
+  }
 
   /**
    * Track an event
@@ -37,7 +47,8 @@ export class AnalyticsEventsService {
       referrerUrl,
     } = data
 
-    const { data: result, error } = await this.supabase
+    const supabase = await this.getClient()
+    const { data: result, error } = await supabase
       .from('analytics_events')
       .insert({
         event_type: eventType,
@@ -250,7 +261,8 @@ export class AnalyticsEventsService {
    * Get cohort analysis by country
    */
   async getCohortAnalysisByCountry(): Promise<any[]> {
-    const { data, error } = await this.supabase
+    const supabase = await this.getClient()
+    const { data, error } = await supabase
       .from('cohort_analysis_country')
       .select('*')
 
@@ -262,7 +274,8 @@ export class AnalyticsEventsService {
    * Get engagement heatmap (by day/hour)
    */
   async getEngagementHeatmap(): Promise<any[]> {
-    const { data, error } = await this.supabase
+    const supabase = await this.getClient()
+    const { data, error } = await supabase
       .from('engagement_heatmap')
       .select('*')
 
@@ -274,7 +287,8 @@ export class AnalyticsEventsService {
    * Get user journey summary
    */
   async getUserJourney(userId: string): Promise<any[]> {
-    const { data, error } = await this.supabase
+    const supabase = await this.getClient()
+    const { data, error } = await supabase
       .from('user_journey_summary')
       .select('*')
       .eq('user_id', userId)
@@ -287,7 +301,8 @@ export class AnalyticsEventsService {
    * Get question-level analytics
    */
   async getQuestionAnalytics(questionId: string): Promise<any> {
-    const { data, error } = await this.supabase
+    const supabase = await this.getClient()
+    const { data, error } = await supabase
       .from('question_analytics')
       .select('*')
       .eq('question_id', questionId)
@@ -304,7 +319,8 @@ export class AnalyticsEventsService {
    * Get assessment quality metrics
    */
   async getAssessmentQuality(assessmentId: string): Promise<any> {
-    const { data, error } = await this.supabase
+    const supabase = await this.getClient()
+    const { data, error } = await supabase
       .from('assessment_quality_metrics')
       .select('*')
       .eq('assessment_id', assessmentId)
@@ -330,7 +346,8 @@ export class AnalyticsEventsService {
       wouldRecommend: boolean
     }
   ): Promise<void> {
-    const { error } = await this.supabase
+    const supabase = await this.getClient()
+    const { error } = await supabase
       .from('assessment_quality_metrics')
       .insert({
         assessment_id: assessmentId,
@@ -356,7 +373,8 @@ export class AnalyticsEventsService {
     toCount: number
     conversionRate: number
   }> {
-    const { data, error } = await this.supabase.rpc('get_conversion_rate', {
+    const supabase = await this.getClient()
+    const { data, error } = await supabase.rpc('get_conversion_rate', {
       p_from_event: fromEvent,
       p_to_event: toEvent,
       p_days: days,
@@ -375,7 +393,8 @@ export class AnalyticsEventsService {
    * Get daily active users
    */
   async getDailyActiveUsers(days: number = 30): Promise<any[]> {
-    const { data, error } = await this.supabase
+    const supabase = await this.getClient()
+    const { data, error } = await supabase
       .from('analytics_events')
       .select('user_id, timestamp')
       .gte(
@@ -403,7 +422,8 @@ export class AnalyticsEventsService {
    * Clean up old events (older than 90 days)
    */
   async cleanupOldEvents(olderThanDays: number = 90): Promise<number> {
-    const { data, error } = await this.supabase
+    const supabase = await this.getClient()
+    const { data, error } = await supabase
       .from('analytics_events')
       .delete()
       .lt('timestamp', new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000).toISOString())

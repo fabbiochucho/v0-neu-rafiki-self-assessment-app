@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Heart, ArrowLeft, CheckCircle } from "lucide-react"
 import { AssessmentStartForm } from "@/components/assessment/assessment-start-form"
+import { ResumeDraftModal } from "@/components/assessment/resume-draft-modal"
 
 export default async function AssessmentStartPage() {
   const supabase = await createClient()
@@ -53,6 +54,7 @@ export default async function AssessmentStartPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Start New Assessment</h1>
           <p className="text-muted-foreground">Choose who you're assessing and which domains to evaluate.</p>
+          <ResumeDraftModal userId={data.user.id} />
         </div>
 
         {userProfiles && userProfiles.length === 0 ? (

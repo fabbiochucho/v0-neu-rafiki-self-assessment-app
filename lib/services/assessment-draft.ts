@@ -17,13 +17,24 @@ export interface DraftData {
 }
 
 export class AssessmentDraftService {
-  private supabase = createClient()
+  private supabasePromise: ReturnType<typeof createClient> | null = null
+
+  /**
+   * Get or create Supabase client
+   */
+  private async getClient() {
+    if (!this.supabasePromise) {
+      this.supabasePromise = createClient()
+    }
+    return this.supabasePromise
+  }
 
   /**
    * Save assessment draft
    */
   async saveDraft(data: DraftData): Promise<AssessmentDraft> {
-    const { data: draft, error } = await this.supabase
+    const supabase = await this.getClient()
+    const { data: draft, error } = await supabase
       .from('assessment_drafts')
       .upsert(
         {
@@ -49,11 +60,9 @@ export class AssessmentDraftService {
   /**
    * Get draft for assessment type
    */
-  async getDraft(
-    userId: string,
-    assessmentType: string
-  ): Promise<AssessmentDraft | null> {
-    const { data, error } = await this.supabase
+  async getDraft(userId: string, assessmentType: string): Promise<AssessmentDraft | null> {
+    const supabase = await this.getClient()
+    const { data, error } = await supabase
       .from('assessment_drafts')
       .select('*')
       .eq('user_id', userId)
@@ -85,7 +94,8 @@ export class AssessmentDraftService {
    * Delete draft
    */
   async deleteDraft(userId: string, assessmentType: string): Promise<void> {
-    const { error } = await this.supabase
+    const supabase = await this.getClient()
+    const { error } = await supabase
       .from('assessment_drafts')
       .delete()
       .eq('user_id', userId)

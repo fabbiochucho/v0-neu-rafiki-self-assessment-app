@@ -16,7 +16,17 @@ export interface ExportData {
 }
 
 export class AssessmentExportService {
-  private supabase = createClient()
+  private supabasePromise: ReturnType<typeof createClient> | null = null
+
+  /**
+   * Get or create Supabase client
+   */
+  private async getClient() {
+    if (!this.supabasePromise) {
+      this.supabasePromise = createClient()
+    }
+    return this.supabasePromise
+  }
 
   /**
    * Create export record
@@ -26,7 +36,8 @@ export class AssessmentExportService {
       ? new Date(Date.now() + data.expiresIn * 24 * 60 * 60 * 1000).toISOString()
       : null
 
-    const { data: exportRecord, error } = await this.supabase
+    const supabase = await this.getClient()
+    const { data: exportRecord, error } = await supabase
       .from('assessment_exports')
       .insert({
         user_id: data.userId,
@@ -47,7 +58,8 @@ export class AssessmentExportService {
    * Get export record
    */
   async getExport(exportId: string): Promise<AssessmentExport | null> {
-    const { data, error } = await this.supabase
+    const supabase = await this.getClient()
+    const { data, error } = await supabase
       .from('assessment_exports')
       .select('*')
       .eq('id', exportId)
@@ -70,7 +82,8 @@ export class AssessmentExportService {
    * List exports for user
    */
   async listExports(userId: string): Promise<AssessmentExport[]> {
-    const { data, error } = await this.supabase
+    const supabase = await this.getClient()
+    const { data, error } = await supabase
       .from('assessment_exports')
       .select('*')
       .eq('user_id', userId)
@@ -136,7 +149,8 @@ Part of the African Neurodiversity Alliance
    * Revoke export sharing
    */
   async revokeExport(exportId: string, userId: string): Promise<void> {
-    const { error } = await this.supabase
+    const supabase = await this.getClient()
+    const { error } = await supabase
       .from('assessment_exports')
       .update({ shareable_link: false })
       .eq('id', exportId)

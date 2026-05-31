@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import Link from "next/link"
-import { Heart, ArrowLeft, Download, Calendar, TrendingUp, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react"
+import { Heart, ArrowLeft, Download, Calendar, TrendingUp, AlertCircle, CheckCircle2, AlertTriangle, Share2 } from "lucide-react"
 import { ResultsCharts } from "@/components/assessment/results-charts"
+import { ExportDialog } from "@/components/assessment/export-dialog"
+import { ComparisonView } from "@/components/assessment/comparison-view"
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Bar, PieChart, Pie, Cell } from "recharts"
 
 interface AssessmentResultsPageProps {
@@ -161,6 +163,24 @@ export default async function AssessmentResultsPage({ params }: AssessmentResult
             <Badge variant="secondary" className="text-sm">
               Completed {completedDate}
             </Badge>
+          </div>
+
+          <div className="space-y-4 mb-6">
+            <div className="flex flex-wrap gap-2">
+              <ExportDialog assessmentId={id} assessmentType={assessment.assessment_type} />
+              <Link href={`/assessment/${id}/compare`}>
+                <Button variant="outline" className="gap-2">
+                  <Share2 className="h-4 w-4" />
+                  Compare Assessments
+                </Button>
+              </Link>
+              <Link href="/dashboard">
+                <Button variant="outline" className="gap-2">
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Dashboard
+                </Button>
+              </Link>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4 mb-6">
