@@ -66,6 +66,16 @@ export function ComparisonView({
 
   return (
     <div className="space-y-6">
+      {/* Screen reader summary */}
+      <div className="sr-only">
+        <h2>Assessment Comparison Summary</h2>
+        <p>
+          Comparing assessment from {new Date(firstAssessment.created_at).toLocaleDateString()} 
+          with assessment from {new Date(secondAssessment.created_at).toLocaleDateString()}, 
+          {calculateDaysBetween()} days apart.
+        </p>
+      </div>
+
       {/* Timeline */}
       <Card>
         <CardHeader>
@@ -103,7 +113,7 @@ export function ComparisonView({
             Visual comparison of scores across categories
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={comparison}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -119,6 +129,33 @@ export function ComparisonView({
               />
             </BarChart>
           </ResponsiveContainer>
+
+          {/* Screen reader only data table */}
+          <div className="sr-only">
+            <table>
+              <caption>Detailed Score Comparison Data</caption>
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>First Assessment</th>
+                  <th>Second Assessment</th>
+                  <th>Change</th>
+                  <th>Percent Change</th>
+                </tr>
+              </thead>
+              <tbody>
+                {comparison.map((item) => (
+                  <tr key={item.name}>
+                    <td>{item.name}</td>
+                    <td>{item.before}</td>
+                    <td>{item.after}</td>
+                    <td>{item.change > 0 ? '+' : ''}{item.change}</td>
+                    <td>{item.percentChange > 0 ? '+' : ''}{item.percentChange}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
 

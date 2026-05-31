@@ -113,11 +113,17 @@ export function ExportDialog({
     }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Export Assessment</DialogTitle>
-          <DialogDescription>
-            Download or share your assessment results
+          <DialogTitle id="export-dialog-title">Export Assessment Results</DialogTitle>
+          <DialogDescription id="export-dialog-desc">
+            Choose your preferred format. Files are generated securely and available for download immediately.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Screen reader only metadata */}
+        <div className="sr-only">
+          <p>Assessment Type: {assessmentType}</p>
+          <p>Assessment ID: {assessmentId}</p>
+        </div>
 
         {exported ? (
           <div className="space-y-4">
