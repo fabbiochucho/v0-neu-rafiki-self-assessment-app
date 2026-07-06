@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
+import Link from "next/link"
+
+const ASSESSMENT_CONSENT_VERSION = "1.0"
 
 interface UserProfile {
   id: string
@@ -37,6 +41,9 @@ export function AssessmentStartForm({ userProfiles, domains }: AssessmentStartFo
   const [assessmentType, setAssessmentType] = useState<string>("baseline")
   const [selectedDomains, setSelectedDomains] = useState<string[]>([])
   const [respondentType, setRespondentType] = useState<string>("")
+  const [assessmentSubject, setAssessmentSubject] = useState<"self" | "child">("self")
+  const [childConsent, setChildConsent] = useState(false)
+  const [guardianRelationship, setGuardianRelationship] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -56,6 +63,15 @@ export function AssessmentStartForm({ userProfiles, domains }: AssessmentStartFo
   const ageGroup = getAgeGroup(profileAge)
   const availableDomains = domains.filter((domain) => domain.age_groups.includes(ageGroup))
 
+  // Default the consent-step subject based on the selected profile's age, so
+  // a profile for a minor doesn't silently default to "myself".
+  useEffect(() => {
+    if (selectedProfileData) {
+      setAssessmentSubject(profileAge > 0 && profileAge < 18 ? "child" : "self")
+      setChildConsent(false)
+    }
+  }, [selectedProfile])
+
   const handleDomainToggle = (domainId: string) => {
     setSelectedDomains((prev) => (prev.includes(domainId) ? prev.filter((id) => id !== domainId) : [...prev, domainId]))
   }
@@ -74,10 +90,23 @@ export function AssessmentStartForm({ userProfiles, domains }: AssessmentStartFo
       return
     }
 
+    if (assessmentSubject === "child" && !childConsent) {
+      setError("Please confirm consent to store this child's assessment responses before continuing")
+      return
+    }
+
     setIsLoading(true)
     setError(null)
 
     try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        throw new Error("You must be signed in to start an assessment")
+      }
+
       // Create assessment record
       const { data: assessment, error: assessmentError } = await supabase
         .from("assessments")
@@ -92,6 +121,22 @@ export function AssessmentStartForm({ userProfiles, domains }: AssessmentStartFo
         .single()
 
       if (assessmentError) throw assessmentError
+
+      // Record explicit per-profile consent to store this assessment's data.
+      // For a child profile this is the parent/guardian consenting on the
+      // child's behalf; the server-side /complete API re-verifies this row
+      // (non-revoked) before it will persist final results.
+      const { error: consentError } = await supabase.from("consents").insert({
+        user_id: user.id,
+        profile_id: selectedProfile,
+        consent_type: "assessment_data",
+        version: ASSESSMENT_CONSENT_VERSION,
+        granted_at: new Date().toISOString(),
+        is_for_minor: assessmentSubject === "child",
+        guardian_relationship: assessmentSubject === "child" ? guardianRelationship.trim() || null : null,
+      })
+
+      if (consentError) throw consentError
 
       // Redirect to assessment questions
       router.push(`/assessment/${assessment.id}/questions`)
@@ -204,6 +249,59 @@ export function AssessmentStartForm({ userProfiles, domains }: AssessmentStartFo
           </div>
         )}
 
+        {/* Consent Step */}
+        {selectedProfile && (
+          <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
+            <Label>This assessment is about *</Label>
+            <RadioGroup
+              value={assessmentSubject}
+              onValueChange={(value) => setAssessmentSubject(value as "self" | "child")}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="self" id="subject-self" />
+                <Label htmlFor="subject-self">Myself</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="child" id="subject-child" />
+                <Label htmlFor="subject-child">My child (I am completing this as their parent/guardian)</Label>
+              </div>
+            </RadioGroup>
+
+            {assessmentSubject === "child" && (
+              <div className="space-y-3 pt-2">
+                <div className="space-y-2">
+                  <Label htmlFor="guardianRelationship">Your relationship to the child (optional)</Label>
+                  <Input
+                    id="guardianRelationship"
+                    placeholder="e.g., parent, legal guardian"
+                    value={guardianRelationship}
+                    onChange={(e) => setGuardianRelationship(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    id="childConsent"
+                    checked={childConsent}
+                    onCheckedChange={(checked) => setChildConsent(checked === true)}
+                  />
+                  <Label htmlFor="childConsent" className="text-sm font-normal leading-snug">
+                    I consent, as this child&apos;s parent/guardian, to NeuRafiki collecting and storing their
+                    assessment responses as described in the{" "}
+                    <Link href="/privacy" target="_blank" className="text-primary hover:underline">
+                      Privacy Policy
+                    </Link>{" "}
+                    and{" "}
+                    <Link href="/terms" target="_blank" className="text-primary hover:underline">
+                      Terms
+                    </Link>
+                    .
+                  </Label>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {error && (
           <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
             {error}
@@ -213,7 +311,13 @@ export function AssessmentStartForm({ userProfiles, domains }: AssessmentStartFo
         <div className="pt-4">
           <Button
             onClick={handleStartAssessment}
-            disabled={isLoading || !selectedProfile || !respondentType || selectedDomains.length === 0}
+            disabled={
+              isLoading ||
+              !selectedProfile ||
+              !respondentType ||
+              selectedDomains.length === 0 ||
+              (assessmentSubject === "child" && !childConsent)
+            }
             className="w-full"
           >
             {isLoading ? (

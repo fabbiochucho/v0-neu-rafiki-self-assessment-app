@@ -73,7 +73,7 @@ export default function ReportsPage() {
       return Object.values(domainStats).map((stat: any) => ({
         domain: stat.domain,
         completed: stat.completed,
-        average_score: (stat.total_score / stat.completed).toFixed(2),
+        average_score: stat.total_score / stat.completed,
         participants: stat.participants.size,
       }))
     },
@@ -84,7 +84,7 @@ export default function ReportsPage() {
 
     const csv = [
       ["Domain", "Completed Assessments", "Average Score", "Participants"],
-      ...reportData.map((row: ReportData) => [row.domain, row.completed, row.average_score, row.participants]),
+      ...reportData.map((row: ReportData) => [row.domain, row.completed, row.average_score.toFixed(2), row.participants]),
     ]
       .map((row) => row.join(","))
       .join("\n")
@@ -183,7 +183,7 @@ export default function ReportsPage() {
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Avg Score</p>
-                        <p className="text-lg font-bold">{row.average_score}</p>
+                        <p className="text-lg font-bold">{row.average_score.toFixed(2)}</p>
                       </div>
                     </div>
                   </CardContent>

@@ -200,7 +200,7 @@ export default async function AssessmentResultsPage({ params }: AssessmentResult
         <div className="space-y-6">
           <h2 className="text-2xl font-bold">Domain Results</h2>
 
-          {results.map((result) => (
+          {results.map((result: any) => (
             <Card key={result.id} className="overflow-hidden">
               <CardHeader>
                 <div className="flex items-center justify-between">

@@ -37,17 +37,13 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Check if mock auth is enabled and if there's a mock session in cookies
-  const isMockAuthEnabled = process.env.NEXT_PUBLIC_MOCK_AUTH === "true"
-  const mockUserCookie = request.cookies.get("mock_user_session")?.value
-
-  const hasValidSession = user || (isMockAuthEnabled && mockUserCookie)
-
   if (
     request.nextUrl.pathname !== "/" &&
-    !hasValidSession &&
+    !user &&
     !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth")
+    !request.nextUrl.pathname.startsWith("/auth") &&
+    !request.nextUrl.pathname.startsWith("/privacy") &&
+    !request.nextUrl.pathname.startsWith("/terms")
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()

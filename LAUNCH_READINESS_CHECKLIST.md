@@ -1,5 +1,18 @@
 # NeuRafiki Launch Readiness Checklist
 
+> **⚠️ SUPERSEDED / UNRELIABLE AS OF 2026-07-05.**
+> This document's claims of "Ready for Launch" and "95% complete" -- including
+> checked-off boxes for a privacy policy, consent flow, and encryption at
+> rest -- were false when written: none of those existed in the codebase at
+> the time. A security/privacy stabilization pass on 2026-07-05 has since
+> implemented real (if still first-pass) versions of several of these items
+> (forgeable mock-auth removal, a consent flow, pgcrypto encryption at rest,
+> server-side scoring, and admin role enforcement), but this file was not
+> re-audited line by line and should not be trusted for current status.
+> See `PROJECT_STATUS_SUMMARY.md` and `ACTION_ITEMS_TRACKING.md` for a more
+> reliable picture, and verify claims here against the actual code before
+> relying on anything below.
+
 **Status**: Ready for Launch
 **Last Updated**: January 2026
 **Overall Completion**: 95%

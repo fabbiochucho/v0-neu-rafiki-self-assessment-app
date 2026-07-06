@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react"
-import { isMockMode, mockSignUp } from "@/lib/auth-mock"
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -25,12 +25,15 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Heart } from "lucide-react"
 
+const CONSENT_VERSION = "1.0"
+
 export default function SignUpPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [accountType, setAccountType] = useState<"individual" | "organization">("individual");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -65,6 +68,12 @@ export default function SignUpPage() {
       return;
     }
 
+    if (!agreedToTerms) {
+      setError("You must agree to the Privacy Policy and Terms to create an account");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       // Store user metadata for post-signup profile creation
       if (typeof window !== "undefined") {
@@ -77,31 +86,52 @@ export default function SignUpPage() {
         );
       }
 
-      // Use mock auth in preview environment, real auth in production
-      if (isMockMode()) {
-        console.log("[v0] Using mock authentication for preview");
-        await mockSignUp(email, password);
-        console.log("[v0] Mock sign-up successful");
-      } else {
-        console.log("[v0] Using real Supabase authentication");
-        const supabase = createClient();
+      const supabase = createClient();
 
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo:
-              process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-              `${window.location.origin}/auth/sign-up-success`,
-            data: {
-              full_name: fullName,
-              account_type: accountType,
-            },
+      const { data: signUpData, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo:
+            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
+            `${window.location.origin}/auth/sign-up-success`,
+          data: {
+            full_name: fullName,
+            account_type: accountType,
           },
-        });
+        },
+      });
 
-        if (error) throw error;
-        console.log("[v0] Supabase sign-up successful");
+      if (error) throw error;
+
+      // Record account-level consent. This project has email confirmation
+      // enabled (see app/auth/sign-up-success/page.tsx), so signUp() does not
+      // return an active session yet -- an insert attempted right now would
+      // fail RLS (auth.uid() = user_id has no uid() to compare against
+      // without a session). Try anyway in case confirmation is disabled in
+      // some environments, but always also stash the fact that consent was
+      // given so app/auth/login/page.tsx can record it as soon as a real
+      // session exists (first login after confirming).
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          "pending_consent",
+          JSON.stringify({ consent_type: "account_terms", version: CONSENT_VERSION }),
+        );
+      }
+
+      if (signUpData.user && signUpData.session) {
+        const { error: consentError } = await supabase.from("consents").insert({
+          user_id: signUpData.user.id,
+          consent_type: "account_terms",
+          version: CONSENT_VERSION,
+          granted_at: new Date().toISOString(),
+          is_for_minor: false,
+        });
+        if (!consentError && typeof window !== "undefined") {
+          localStorage.removeItem("pending_consent");
+        } else if (consentError) {
+          console.error("[consent] Failed to record account_terms consent:", consentError);
+        }
       }
 
       router.push("/auth/sign-up-success");
@@ -199,13 +229,33 @@ export default function SignUpPage() {
                     />
                   </div>
 
+                  <div className="flex items-start gap-2 pt-1">
+                    <Checkbox
+                      id="agreeToTerms"
+                      checked={agreedToTerms}
+                      onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+                      required
+                    />
+                    <Label htmlFor="agreeToTerms" className="text-sm font-normal leading-snug">
+                      I agree to the{" "}
+                      <Link href="/privacy" target="_blank" className="text-primary hover:underline">
+                        Privacy Policy
+                      </Link>{" "}
+                      and{" "}
+                      <Link href="/terms" target="_blank" className="text-primary hover:underline">
+                        Terms
+                      </Link>
+                      . This may include storing my child&apos;s assessment responses if I assess a child.
+                    </Label>
+                  </div>
+
                   {error && (
                     <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
                       {error}
                     </div>
                   )}
 
-                  <Button type="submit" className="w-full mt-2" disabled={isLoading}>
+                  <Button type="submit" className="w-full mt-2" disabled={isLoading || !agreedToTerms}>
                     {isLoading ? "Creating account..." : "Sign Up"}
                   </Button>
                 </div>

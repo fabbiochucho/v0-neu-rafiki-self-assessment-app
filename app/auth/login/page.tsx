@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-import { isMockMode, mockSignIn } from "@/lib/auth-mock"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -27,25 +26,42 @@ export default function LoginPage() {
     try {
       console.log("[v0] Login attempt with email:", email)
 
-      // Use mock auth in preview environment, real auth in production
-      if (isMockMode()) {
-        console.log("[v0] Using mock authentication for preview")
-        await mockSignIn(email, password)
-        console.log("[v0] Mock login successful")
-      } else {
-        console.log("[v0] Using real Supabase authentication")
-        const supabase = createClient()
+      const supabase = createClient()
 
-        const { error, data } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-        if (error) {
-          throw new Error(error.message || "Authentication failed")
+      if (error) {
+        throw new Error(error.message || "Authentication failed")
+      }
+
+      console.log("[v0] Supabase login successful")
+
+      // If sign-up happened while email confirmation was pending, the
+      // account_terms consent recorded there couldn't be inserted yet (no
+      // session = no auth.uid() for the RLS check). Now that we have a real
+      // session, record it if it's still outstanding.
+      if (typeof window !== "undefined" && data.user) {
+        const pending = localStorage.getItem("pending_consent")
+        if (pending) {
+          try {
+            const { consent_type, version } = JSON.parse(pending)
+            const { error: consentError } = await supabase.from("consents").insert({
+              user_id: data.user.id,
+              consent_type,
+              version,
+              granted_at: new Date().toISOString(),
+              is_for_minor: false,
+            })
+            if (!consentError) {
+              localStorage.removeItem("pending_consent")
+            }
+          } catch (consentErr) {
+            console.error("[consent] Failed to record pending consent on login:", consentErr)
+          }
         }
-
-        console.log("[v0] Supabase login successful")
       }
 
       console.log("[v0] Login successful, redirecting to dashboard")
