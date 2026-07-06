@@ -3,11 +3,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MapPin, Phone, Mail, Globe, Search, Heart, Users, BookOpen, Zap } from "lucide-react"
-import Link from "next/link"
-import { useSearchParams } from "next/navigation"
-import { Suspense } from "react"
-import Loading from "./loading"
+import { MapPin, Phone, Mail, Globe, Search, Users, BookOpen } from "lucide-react"
+import { isFederationEnabled, getSiblingAppUrl } from "@/lib/federation/config"
 
 interface Resource {
   id: string
@@ -24,8 +21,11 @@ interface Resource {
   serviceArea: string[]
 }
 
-// Sample resources data - in production, this would come from the database
-const resources: Resource[] = [
+// Static fallback -- always available regardless of whether this deployment
+// is connected to the Alliance app. Used when federation isn't configured
+// (NEXT_PUBLIC_ALLIANCE_APP_URL unset), or if the live fetch below fails for
+// any reason (sibling unreachable, bad response, etc).
+const staticResources: Resource[] = [
   {
     id: "1",
     name: "Kenya Autism Society",
@@ -98,10 +98,67 @@ const resources: Resource[] = [
   },
 ]
 
-const categories = Array.from(new Set(resources.map((r) => r.category)))
-const countries = Array.from(new Set(resources.map((r) => r.country)))
+// Shape returned by Alliance's public GET /api/resources (see that repo's
+// scripts/009_create_resources_table.sql + app/api/resources/route.ts).
+interface AllianceResource {
+  id: string
+  name: string
+  description: string | null
+  category: string
+  country: string | null
+  location: string | null
+  url: string | null
+  contact_info: { phone?: string; email?: string; website?: string } | null
+  specialties: string[] | null
+}
 
-export default function ResourcesPage() {
+function mapAllianceResource(r: AllianceResource): Resource {
+  return {
+    id: r.id,
+    name: r.name,
+    description: r.description || "",
+    category: r.category,
+    country: r.country || "Unknown",
+    serviceType: "Alliance directory",
+    contact: {
+      phone: r.contact_info?.phone,
+      email: r.contact_info?.email,
+      website: r.contact_info?.website || r.url || undefined,
+    },
+    serviceArea: r.location ? [r.location] : [],
+  }
+}
+
+// Fetches Alliance's public resource directory when this deployment is
+// federation-enabled, falling back to the static list above on any failure
+// (unset env var, network error, bad response shape) so this page always
+// renders something rather than a broken/empty state.
+async function loadResources(): Promise<Resource[]> {
+  if (!isFederationEnabled()) return staticResources
+
+  const siblingUrl = getSiblingAppUrl()
+  if (!siblingUrl) return staticResources
+
+  try {
+    const res = await fetch(`${siblingUrl}/api/resources`, { next: { revalidate: 3600 } })
+    if (!res.ok) return staticResources
+
+    const body = await res.json()
+    if (!Array.isArray(body?.resources)) return staticResources
+
+    const mapped = (body.resources as AllianceResource[]).map(mapAllianceResource)
+    return mapped.length > 0 ? mapped : staticResources
+  } catch {
+    return staticResources
+  }
+}
+
+export default async function ResourcesPage() {
+  const resources = await loadResources()
+  const categories = Array.from(new Set(resources.map((r) => r.category)))
+  const countries = Array.from(new Set(resources.map((r) => r.country)))
+  const serviceTypes = Array.from(new Set(resources.map((r) => r.serviceType)))
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -153,7 +210,7 @@ export default function ResourcesPage() {
                 </TabsContent>
 
                 <TabsContent value="type" className="flex flex-wrap gap-2 mt-4">
-                  {["NGO", "Clinic", "Hospital", "Association"].map((type) => (
+                  {serviceTypes.map((type) => (
                     <Badge key={type} variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground">
                       {type}
                     </Badge>
@@ -183,17 +240,19 @@ export default function ResourcesPage() {
 
               <CardContent className="space-y-4">
                 {/* Service Areas */}
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium text-sm">Service Areas</span>
+                {resource.serviceArea.length > 0 && (
+                  <div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium text-sm">Service Areas</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {resource.serviceArea.map((area) => (
+                        <Badge key={area} variant="outline">{area}</Badge>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {resource.serviceArea.map((area) => (
-                      <Badge key={area} variant="outline">{area}</Badge>
-                    ))}
-                  </div>
-                </div>
+                )}
 
                 {/* Contact Information */}
                 <div className="grid md:grid-cols-3 gap-4 pt-4 border-t">
@@ -216,7 +275,7 @@ export default function ResourcesPage() {
                   )}
 
                   {resource.contact.website && (
-                    <a href={`https://${resource.contact.website}`} target="_blank" rel="noopener noreferrer">
+                    <a href={`https://${resource.contact.website.replace(/^https?:\/\//, "")}`} target="_blank" rel="noopener noreferrer">
                       <div className="flex items-center space-x-2 p-3 rounded-lg hover:bg-muted transition-colors cursor-pointer">
                         <Globe className="h-4 w-4 text-primary" />
                         <span className="text-sm font-medium">{resource.contact.website}</span>
