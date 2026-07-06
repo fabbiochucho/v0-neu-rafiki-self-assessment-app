@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Note: no Playwright/e2e job here on purpose. tests/e2e/** specs need a live
+# Supabase project with seeded question-bank data (real domains/questions/
+# scoring rules), and this repo has no secrets configured in CI to provision
+# one -- they run locally/against a staging environment instead.
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      # Build-time placeholders only -- not real secrets. They exist so
+      # `next build` can get past static prerendering (env vars are read at
+      # module load time in lib/supabase/* and lib/federation/*), not to
+      # exercise any real Supabase project or federation link in CI.
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+      SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
+      ASSESSMENT_ENCRYPTION_KEY: placeholder-assessment-encryption-key-0000000000
+      # Phase 1 federation (optional feature). Setting NEXT_PUBLIC_ALLIANCE_APP_URL
+      # exercises the "federation enabled" code paths during the build. These
+      # key values are deliberately NOT valid PEM/not real cryptographic
+      # material -- lib/federation/keys.ts only parses them inside request
+      # handlers (signing/verifying a token), never at module load or during
+      # static generation, so a plain placeholder string is sufficient here.
+      # Do not paste a real or even a throwaway-but-valid keypair into this
+      # file -- committed valid-looking private keys trip secret scanners
+      # and confuse future readers about whether they're real.
+      NEXT_PUBLIC_ALLIANCE_APP_URL: https://alliance.placeholder.example.com
+      FEDERATION_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\nplaceholder\n-----END PRIVATE KEY-----\n"
+      FEDERATION_ALLIANCE_PUBLIC_KEY: "-----BEGIN PUBLIC KEY-----\nplaceholder\n-----END PUBLIC KEY-----\n"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm exec tsc --noEmit
+
+      - name: Build (runs ESLint, including jsx-a11y, as part of next build)
+        run: pnpm build
+
+      - name: Unit tests
+        run: pnpm exec vitest run

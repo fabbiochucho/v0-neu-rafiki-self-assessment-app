@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -53,6 +53,23 @@ export function AssessmentQuestions({ assessment, questions, existingResponses }
   const [error, setError] = useState<string | null>(null)
 
   const router = useRouter()
+
+  // Focus management: when the current question changes, move focus to the
+  // new question's heading so keyboard/screen-reader users land somewhere
+  // meaningful instead of being stranded on a page that visually changed but
+  // whose focus stayed on the (now stale) Previous/Next button. Skipped on
+  // the very first render so we don't steal focus away from the initial
+  // page load.
+  const questionHeadingRef = useRef<HTMLDivElement>(null)
+  const isFirstRender = useRef(true)
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    questionHeadingRef.current?.focus()
+  }, [currentQuestionIndex])
 
   // Initialize responses from existing data
   useEffect(() => {
@@ -210,16 +227,41 @@ export function AssessmentQuestions({ assessment, questions, existingResponses }
         {/* Question Card */}
         <Card className="mb-6">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <Badge variant="outline">{currentQuestion.assessment_domains.name}</Badge>
-              <span className="text-sm text-muted-foreground">{currentQuestion.question_id}</span>
+            {/*
+              tabIndex={-1} + the ref lets us programmatically move focus
+              here on question transitions (see the useEffect above) without
+              making this focusable via Tab, while still being a valid
+              target for aria-labelledby.
+            */}
+            <div
+              ref={questionHeadingRef}
+              tabIndex={-1}
+              className="outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+            >
+              <div className="flex items-center justify-between">
+                <Badge variant="outline">{currentQuestion.assessment_domains.name}</Badge>
+                <span className="text-sm text-muted-foreground">{currentQuestion.question_id}</span>
+              </div>
+              <CardTitle id={`question-heading-${currentQuestion.id}`} className="text-lg leading-relaxed mt-1">
+                {currentQuestion.question_text}
+              </CardTitle>
             </div>
-            <CardTitle className="text-lg leading-relaxed">{currentQuestion.question_text}</CardTitle>
           </CardHeader>
           <CardContent>
+            {/*
+              RadioGroupPrimitive.Root already renders role="radiogroup", so
+              rather than adding a redundant native <fieldset>, we label the
+              group via aria-labelledby (pointing at the question heading
+              above) and, when validation fails, mark it invalid and point
+              aria-describedby at the visible error text below so screen
+              readers announce both the group's name and its error state.
+            */}
             <RadioGroup
               value={responses[currentQuestion.id] || ""}
               onValueChange={(value) => handleResponseChange(currentQuestion.id, value)}
+              aria-labelledby={`question-heading-${currentQuestion.id}`}
+              aria-invalid={!!error}
+              aria-describedby={error ? "question-error" : undefined}
             >
               {currentQuestion.options.map((option, index) => (
                 <div key={index} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
@@ -234,7 +276,11 @@ export function AssessmentQuestions({ assessment, questions, existingResponses }
         </Card>
 
         {error && (
-          <div className="mb-6 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+          <div
+            id="question-error"
+            role="alert"
+            className="mb-6 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md"
+          >
             {error}
           </div>
         )}

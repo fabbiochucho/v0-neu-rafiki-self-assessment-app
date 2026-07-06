@@ -173,9 +173,11 @@ export default function AnalyticsDashboard() {
         <CardContent className="pt-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-end">
             <div className="flex-1">
-              <label className="text-sm font-medium">Organization</label>
+              <label htmlFor="organization-filter" className="text-sm font-medium">
+                Organization
+              </label>
               <Select value={organizationId} onValueChange={setOrganizationId}>
-                <SelectTrigger>
+                <SelectTrigger id="organization-filter">
                   <SelectValue placeholder="Select organization" />
                 </SelectTrigger>
                 <SelectContent>
@@ -189,9 +191,11 @@ export default function AnalyticsDashboard() {
             </div>
 
             <div>
-              <label className="text-sm font-medium">Date Range</label>
+              <label htmlFor="date-range-filter" className="text-sm font-medium">
+                Date Range
+              </label>
               <Select value={dateRange} onValueChange={setDateRange}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger id="date-range-filter" className="w-40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

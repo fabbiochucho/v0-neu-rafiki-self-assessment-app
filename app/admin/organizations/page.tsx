@@ -164,10 +164,10 @@ export default function OrganizationsPage() {
               <CardTitle className="flex items-start justify-between">
                 <span className="flex-1">{org.name}</span>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="ghost" onClick={() => handleEdit(org)}>
+                  <Button size="sm" variant="ghost" onClick={() => handleEdit(org)} aria-label={`Edit ${org.name}`}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => handleDelete(org.id)}>
+                  <Button size="sm" variant="ghost" onClick={() => handleDelete(org.id)} aria-label={`Delete ${org.name}`}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

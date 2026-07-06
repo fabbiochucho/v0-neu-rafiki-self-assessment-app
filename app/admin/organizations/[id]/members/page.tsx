@@ -135,7 +135,12 @@ export default function OrganizationMembersPage() {
                   </p>
                 </div>
               </div>
-              <Button size="sm" variant="ghost" onClick={() => handleRemoveMember(member.id)}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleRemoveMember(member.id)}
+                aria-label={`Remove ${member.email}`}
+              >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </CardContent>
