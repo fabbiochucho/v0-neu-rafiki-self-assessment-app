@@ -77,7 +77,7 @@ export default async function ProfilesPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Profile Management</h1>
           <p className="text-muted-foreground">
-            Manage profiles for family members, students, or individuals you're assessing.
+            Manage profiles for family members, students, or individuals you&apos;re assessing.
           </p>
         </div>
 
@@ -154,8 +154,10 @@ export default async function ProfilesPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {userProfiles.map((profile) => {
                 const age = profile.age || getAgeFromBirthDate(profile.date_of_birth)
-                const completedAssessments = profile.assessments?.filter((a) => a.status === "completed").length || 0
-                const inProgressAssessments = profile.assessments?.filter((a) => a.status === "in_progress").length || 0
+                const completedAssessments =
+                  profile.assessments?.filter((a: { status: string }) => a.status === "completed").length || 0
+                const inProgressAssessments =
+                  profile.assessments?.filter((a: { status: string }) => a.status === "in_progress").length || 0
 
                 return (
                   <Card key={profile.id} className="hover:shadow-md transition-shadow">
@@ -260,7 +262,7 @@ export default async function ProfilesPage() {
           <Card className="mt-6 border-amber-200 bg-amber-50">
             <CardContent className="p-4">
               <p className="text-amber-800 text-sm">
-                You've reached the maximum of 5 profiles for individual accounts. Consider upgrading to an organization
+                You&apos;ve reached the maximum of 5 profiles for individual accounts. Consider upgrading to an organization
                 account for unlimited profiles and additional features.
               </p>
             </CardContent>

@@ -52,7 +52,7 @@ export default async function AssessmentStartPage() {
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Start New Assessment</h1>
-          <p className="text-muted-foreground">Choose who you're assessing and which domains to evaluate.</p>
+          <p className="text-muted-foreground">Choose who you&apos;re assessing and which domains to evaluate.</p>
         </div>
 
         {userProfiles && userProfiles.length === 0 ? (

@@ -166,8 +166,16 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t py-8 px-4">
-        <div className="container mx-auto text-center text-muted-foreground">
+        <div className="container mx-auto text-center text-muted-foreground space-y-2">
           <p>&copy; 2025 NeuRafiki. Part of the African Neurodiversity Alliance ecosystem.</p>
+          <p className="flex items-center justify-center gap-4 text-sm">
+            <Link href="/privacy" className="hover:underline">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="hover:underline">
+              Terms of Service
+            </Link>
+          </p>
         </div>
       </footer>
     </div>

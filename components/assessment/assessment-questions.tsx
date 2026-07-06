@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -54,7 +53,6 @@ export function AssessmentQuestions({ assessment, questions, existingResponses }
   const [error, setError] = useState<string | null>(null)
 
   const router = useRouter()
-  const supabase = createClient()
 
   // Initialize responses from existing data
   useEffect(() => {
@@ -88,22 +86,23 @@ export function AssessmentQuestions({ assessment, questions, existingResponses }
       return
     }
 
-    // Save the response
-    await saveResponse(currentQ.id, response)
+    // Save the response server-side (score is computed there, not trusted from the client)
+    const saved = await saveResponse(currentQ.id, response)
+    if (!saved) return
 
     if (isLastQuestion) {
-      // Calculate final results and redirect
+      // Ask the server to compute final domain results and mark the
+      // assessment completed, then redirect.
       try {
         setIsLoading(true)
-        const { error: resultError } = await supabase
-          .from("assessments")
-          .update({
-            completed_at: new Date().toISOString(),
-            status: "completed",
-          })
-          .eq("id", assessment.id)
+        const res = await fetch(`/api/assessments/${assessment.id}/complete`, {
+          method: "POST",
+        })
+        const body = await res.json().catch(() => ({}))
 
-        if (resultError) throw resultError
+        if (!res.ok) {
+          throw new Error(body.error || "Failed to complete assessment")
+        }
 
         router.push(`/assessment/${assessment.id}/results`)
       } catch (err) {
@@ -122,144 +121,37 @@ export function AssessmentQuestions({ assessment, questions, existingResponses }
     }
   }
 
-  const calculateScore = (question: Question, responseValue: string): number => {
-    const options = question.options
-    const responseIndex = options.indexOf(responseValue)
-
-    // Basic scoring logic - can be enhanced based on specific assessment needs
-    if (question.question_type === "likert") {
-      return responseIndex * question.score_weight
-    } else if (question.question_type === "yes_no" || question.question_type === "multiple_choice") {
-      // For yes/no and multiple choice, assign scores based on response
-      return responseIndex * question.score_weight
-    }
-
-    return 0
-  }
-
-  const saveResponse = async (questionId: string, responseValue: string) => {
-    const question = questions.find((q) => q.id === questionId)
-    if (!question) return
-
-    const score = calculateScore(question, responseValue)
-
+  /**
+   * Persists a single question's response via the server-side API. All
+   * scoring happens on the server (see app/api/assessments/[id]/responses/route.ts
+   * and lib/assessment/scoring.ts) -- the client only ever sends the raw
+   * response value, never a score.
+   */
+  const saveResponse = async (questionId: string, responseValue: string): Promise<boolean> => {
     try {
       setIsSaving(true)
       setError(null)
 
-      // Check if response exists for this assessment and question
-      const { data: existingResponse } = await supabase
-        .from("assessment_responses")
-        .select("id")
-        .eq("assessment_id", assessment.id)
-        .eq("question_id", questionId)
-        .maybeSingle()
+      const res = await fetch(`/api/assessments/${assessment.id}/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question_id: questionId, response_value: responseValue }),
+      })
 
-      if (existingResponse) {
-        // Update existing response
-        const { error: updateError } = await supabase
-          .from("assessment_responses")
-          .update({
-            response_value: responseValue,
-            score: score,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", existingResponse.id)
+      const body = await res.json().catch(() => ({}))
 
-        if (updateError) throw updateError
-      } else {
-        // Insert new response
-        const { error: insertError } = await supabase
-          .from("assessment_responses")
-          .insert({
-            assessment_id: assessment.id,
-            question_id: questionId,
-            response_value: responseValue,
-            score: score,
-          })
-
-        if (insertError) throw insertError
+      if (!res.ok) {
+        throw new Error(body.error || "Failed to save response")
       }
+
+      return true
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to save response"
       setError(message)
       console.error("[v0] Error saving response:", err)
+      return false
     } finally {
       setIsSaving(false)
-    }
-  }
-
-  const completeAssessment = async () => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      // Mark assessment as completed
-      const { error: updateError } = await supabase
-        .from("assessments")
-        .update({
-          status: "completed",
-          completed_at: new Date().toISOString(),
-        })
-        .eq("id", assessment.id)
-
-      if (updateError) throw updateError
-
-      // Calculate and save results
-      await calculateResults()
-
-      router.push(`/assessment/${assessment.id}/results`)
-    } catch (error) {
-      console.error("Error completing assessment:", error)
-      setError(error instanceof Error ? error.message : "Failed to complete assessment")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const calculateResults = async () => {
-    // Group responses by domain
-    const domainScores: Record<string, { total: number; max: number; count: number }> = {}
-
-    questions.forEach((question) => {
-      const domainName = question.assessment_domains.name
-      const response = responses[question.id]
-
-      if (response) {
-        const score = calculateScore(question, response)
-        const maxScore = (question.options.length - 1) * question.score_weight
-
-        if (!domainScores[domainName]) {
-          domainScores[domainName] = { total: 0, max: 0, count: 0 }
-        }
-
-        domainScores[domainName].total += score
-        domainScores[domainName].max += maxScore
-        domainScores[domainName].count += 1
-      }
-    })
-
-    // Save results for each domain
-    for (const [domainName, scores] of Object.entries(domainScores)) {
-      const percentage = (scores.total / scores.max) * 100
-      let riskLevel = "low"
-
-      if (percentage >= 70) riskLevel = "high"
-      else if (percentage >= 40) riskLevel = "moderate"
-
-      await supabase.from("assessment_results").upsert(
-        {
-          assessment_id: assessment.id,
-          domain_name: domainName,
-          total_score: scores.total,
-          max_possible_score: scores.max,
-          percentage_score: percentage,
-          risk_level: riskLevel,
-        },
-        {
-          onConflict: "assessment_id,domain_name",
-        },
-      )
     }
   }
 

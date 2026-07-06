@@ -156,7 +156,7 @@ export default async function InstitutionalDashboardPage() {
                     {recentAssessments.map((assessment) => (
                       <div key={assessment.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div>
-                          <p className="font-medium">{assessment.user_profiles?.full_name}</p>
+                          <p className="font-medium">{assessment.user_profiles?.[0]?.full_name}</p>
                           <p className="text-sm text-muted-foreground">
                             {assessment.completed_at ? new Date(assessment.completed_at).toLocaleDateString() : "In Progress"}
                           </p>
@@ -182,7 +182,7 @@ export default async function InstitutionalDashboardPage() {
                   <div className="space-y-2">
                     {highRiskAssessments.map((result, idx) => (
                       <div key={idx} className="flex items-center justify-between p-3 border border-red-200 rounded-lg bg-white">
-                        <p className="font-medium">{result.assessments?.user_profiles?.full_name}</p>
+                        <p className="font-medium">{result.assessments?.[0]?.user_profiles?.[0]?.full_name}</p>
                         <Badge variant="destructive">High Risk</Badge>
                       </div>
                     ))}

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import { createServiceRoleClient, getAssessmentEncryptionKey } from "@/lib/supabase/service"
 import { AssessmentQuestions } from "@/components/assessment/assessment-questions"
 
 interface AssessmentQuestionsPageProps {
@@ -63,8 +64,31 @@ export default async function AssessmentQuestionsPage({ params }: AssessmentQues
     .order("domain_id")
     .order("question_id")
 
-  // Get existing responses
-  const { data: existingResponses } = await supabase.from("assessment_responses").select("*").eq("assessment_id", id)
+  // Get existing responses. response_value is stored encrypted at rest (see
+  // scripts/010_encrypt_sensitive_columns.sql), so decryption must happen via
+  // the service-role client + get_assessment_response(), never by selecting
+  // the column directly with the anon/authenticated client.
+  const serviceClient = createServiceRoleClient()
+  const encryptionKey = getAssessmentEncryptionKey()
+  const { data: encryptedResponses } = await serviceClient
+    .from("assessment_responses")
+    .select("id, question_id, score")
+    .eq("assessment_id", id)
+
+  const existingResponses = await Promise.all(
+    (encryptedResponses || []).map(async (row) => {
+      const { data: decrypted } = await serviceClient.rpc("get_assessment_response", {
+        p_response_id: row.id,
+        p_key: encryptionKey,
+      })
+      return {
+        id: row.id,
+        question_id: row.question_id,
+        response_value: (decrypted as string | null) ?? "",
+        score: row.score,
+      }
+    }),
+  )
 
   return (
     <AssessmentQuestions

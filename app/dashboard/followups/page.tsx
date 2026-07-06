@@ -31,7 +31,7 @@ export default function FollowupsPage() {
   const [selectedProfile, setSelectedProfile] = useState("")
   const [followupType, setFollowupType] = useState("monthly")
 
-  const { data: schedules, mutate: mutateSchedules } = useSWR<FollowupSchedule[]>("/api/followups", async (url) => {
+  const { data: schedules, mutate: mutateSchedules } = useSWR<FollowupSchedule[]>("/api/followups", async (url: string) => {
     const { data, error } = await supabase
       .from("assessment_followup_schedules")
       .select(

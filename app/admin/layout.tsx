@@ -1,12 +1,40 @@
 import type React from "react"
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { LayoutDashboard, Users, Settings, BarChart3 } from "lucide-react"
+import { createClient } from "@/lib/supabase/server"
+import { ADMIN_PANEL_ROLES } from "@/lib/auth/roles"
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect("/auth/login")
+  }
+
+  // Ground truth for roles is organization_members.role (see
+  // scripts/004_expand_institutional_schema.sql / lib/auth/roles.ts). A user
+  // may administer more than one organization; they only need an 'admin'
+  // role on at least one to reach this panel.
+  const { data: adminMemberships } = await supabase
+    .from("organization_members")
+    .select("id")
+    .eq("user_id", user.id)
+    .in("role", ADMIN_PANEL_ROLES)
+    .limit(1)
+
+  if (!adminMemberships || adminMemberships.length === 0) {
+    redirect("/")
+  }
+
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}

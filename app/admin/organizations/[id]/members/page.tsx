@@ -31,7 +31,7 @@ export default function OrganizationMembersPage() {
   const [memberEmail, setMemberEmail] = useState("")
   const [memberRole, setMemberRole] = useState("educator")
 
-  const { data: members, mutate } = useSWR<Member[]>(`/api/organizations/${orgId}/members`, async (url) => {
+  const { data: members, mutate } = useSWR<Member[]>(`/api/organizations/${orgId}/members`, async (url: string) => {
     const { data, error } = await supabase
       .from("organization_members")
       .select("*")

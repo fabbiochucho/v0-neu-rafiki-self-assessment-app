@@ -36,7 +36,7 @@ export default function OrganizationsPage() {
     organization_type: "school",
   })
 
-  const { data: organizations, mutate } = useSWR<Organization[]>("/api/organizations", async (url) => {
+  const { data: organizations, mutate } = useSWR<Organization[]>("/api/organizations", async (url: string) => {
     const { data, error } = await supabase.from("organizations").select("*").order("created_at", { ascending: false })
     if (error) throw error
     return data
