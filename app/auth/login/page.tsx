@@ -7,16 +7,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Suspense, useState } from "react"
 import { Heart } from "lucide-react"
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  )
+}
+
+function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  // Supports being sent here as /auth/login?redirect=/connect?token=... (see
+  // app/connect/page.tsx, which redirects here first if the user isn't
+  // logged in yet) as well as plain logins, which fall back to /dashboard.
+  const redirectTo = searchParams.get("redirect") || "/dashboard"
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,8 +77,8 @@ export default function LoginPage() {
         }
       }
 
-      console.log("[v0] Login successful, redirecting to dashboard")
-      router.push("/dashboard")
+      console.log("[v0] Login successful, redirecting to", redirectTo)
+      router.push(redirectTo)
     } catch (error: unknown) {
       console.error("[v0] Login error:", error)
       let errorMessage = "An error occurred during login"
