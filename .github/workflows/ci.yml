@@ -5,35 +5,33 @@ on:
   push:
     branches: [main]
 
-# Note: no Playwright/e2e job here on purpose. tests/e2e/** specs need a live
-# Supabase project with seeded question-bank data (real domains/questions/
-# scoring rules), and this repo has no secrets configured in CI to provision
-# one -- they run locally/against a staging environment instead.
+# Note: no Playwright/e2e job here on purpose. tests/e2e/** specs need
+# seeded question-bank fixture data and a disposable test account, which
+# this repo's real (production) credentials below aren't set up for --
+# they run locally/against a staging environment instead.
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     env:
-      # Build-time placeholders only -- not real secrets. They exist so
-      # `next build` can get past static prerendering (env vars are read at
-      # module load time in lib/supabase/* and lib/federation/*), not to
-      # exercise any real Supabase project or federation link in CI.
-      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
-      SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
-      ASSESSMENT_ENCRYPTION_KEY: placeholder-assessment-encryption-key-0000000000
-      # Phase 1 federation (optional feature). Setting NEXT_PUBLIC_ALLIANCE_APP_URL
-      # exercises the "federation enabled" code paths during the build. These
-      # key values are deliberately NOT valid PEM/not real cryptographic
-      # material -- lib/federation/keys.ts only parses them inside request
-      # handlers (signing/verifying a token), never at module load or during
-      # static generation, so a plain placeholder string is sufficient here.
-      # Do not paste a real or even a throwaway-but-valid keypair into this
-      # file -- committed valid-looking private keys trip secret scanners
-      # and confuse future readers about whether they're real.
-      NEXT_PUBLIC_ALLIANCE_APP_URL: https://alliance.placeholder.example.com
-      FEDERATION_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\nplaceholder\n-----END PRIVATE KEY-----\n"
-      FEDERATION_ALLIANCE_PUBLIC_KEY: "-----BEGIN PUBLIC KEY-----\nplaceholder\n-----END PUBLIC KEY-----\n"
+      # Real credentials, pulled from this repo's GitHub Actions secrets
+      # (Settings > Secrets and variables > Actions) -- the actual production
+      # Supabase project, encryption key, and federation values. CI only runs
+      # typecheck/build/unit tests (no e2e, no live network calls), but treat
+      # this workflow file with the same care as production config since
+      # real secrets flow through it.
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      ASSESSMENT_ENCRYPTION_KEY: ${{ secrets.ASSESSMENT_ENCRYPTION_KEY }}
+      # Phase 1 federation (optional feature). The federation keypair here is
+      # a CI-only pair, deliberately separate from the real production
+      # keypair in Vercel, to limit blast radius if these CI secrets ever
+      # leak -- CI never performs a real handshake, it only needs *a*
+      # validly-shaped key pair to satisfy build-time parsing.
+      NEXT_PUBLIC_ALLIANCE_APP_URL: ${{ secrets.NEXT_PUBLIC_ALLIANCE_APP_URL }}
+      FEDERATION_PRIVATE_KEY: ${{ secrets.FEDERATION_PRIVATE_KEY }}
+      FEDERATION_ALLIANCE_PUBLIC_KEY: ${{ secrets.FEDERATION_ALLIANCE_PUBLIC_KEY }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
