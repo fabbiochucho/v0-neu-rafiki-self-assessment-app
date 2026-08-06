@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MapPin, Phone, Mail, Globe, Search, Users, BookOpen } from "lucide-react"
+import { MapPin, Phone, Mail, Globe, Search, Users, BookOpen, AlertTriangle } from "lucide-react"
 import { isFederationEnabled, getSiblingAppUrl } from "@/lib/federation/config"
 
 interface Resource {
@@ -25,76 +25,68 @@ interface Resource {
 // is connected to the Alliance app. Used when federation isn't configured
 // (NEXT_PUBLIC_ALLIANCE_APP_URL unset), or if the live fetch below fails for
 // any reason (sibling unreachable, bad response, etc).
+//
+// This used to be a list of specific African NGOs/clinics with invented
+// phone numbers, emails, and websites -- none of which were real
+// organizations. Presenting fabricated contact details as real support
+// services on a mental-health/neurodivergence screening app is actively
+// dangerous (someone in distress could call a fake number expecting real
+// help), so this was replaced with a small set of real, independently
+// verifiable global/international organizations only. It intentionally does
+// NOT include country-specific African resources, since those need to be
+// sourced and verified from a real regional directory (e.g. via an Alliance
+// federation connection, or a vetted list supplied by NeuRafiki's own team)
+// rather than invented here.
 const staticResources: Resource[] = [
   {
-    id: "1",
-    name: "Kenya Autism Society",
-    description: "Provides support, advocacy, and resources for individuals with autism in Kenya",
-    category: "Autism",
-    country: "Kenya",
-    serviceType: "NGO",
+    id: "988-lifeline",
+    name: "988 Suicide & Crisis Lifeline",
+    description: "Free, confidential crisis support, available 24/7. Call or text 988.",
+    category: "Crisis Support",
+    country: "United States",
+    serviceType: "Crisis Line",
     contact: {
-      phone: "+254-123-456789",
-      email: "info@kenyaautism.org",
-      website: "www.kenyaautism.org",
+      phone: "988",
+      website: "988lifeline.org",
     },
-    serviceArea: ["Nairobi", "Mombasa", "Kisumu"],
+    serviceArea: ["United States"],
   },
   {
-    id: "2",
-    name: "ADHD Support Nigeria",
-    description: "Comprehensive ADHD screening, assessment, and treatment services",
-    category: "ADHD",
-    country: "Nigeria",
-    serviceType: "Clinic",
+    id: "crisis-text-line",
+    name: "Crisis Text Line",
+    description: "Free, 24/7 crisis support over text message. Text HOME to 741741.",
+    category: "Crisis Support",
+    country: "United States",
+    serviceType: "Crisis Line",
     contact: {
-      phone: "+234-803-456789",
-      email: "support@adhd-ng.org",
-      website: "www.adhd-ng.org",
+      website: "crisistextline.org",
     },
-    serviceArea: ["Lagos", "Abuja", "Port Harcourt"],
+    serviceArea: ["United States"],
   },
   {
-    id: "3",
-    name: "South African Dyslexia Association",
-    description: "Educational assessment and learning disability support",
-    category: "Learning Disabilities",
-    country: "South Africa",
-    serviceType: "Association",
+    id: "iasp-directory",
+    name: "IASP Crisis Centre Directory",
+    description:
+      "The International Association for Suicide Prevention maintains a directory of crisis centres and hotlines by country -- a starting point for finding local support outside the US.",
+    category: "Crisis Support",
+    country: "Global",
+    serviceType: "Directory",
     contact: {
-      phone: "+27-21-789012",
-      email: "info@dyslexia-sa.org",
-      website: "www.dyslexia-sa.org",
+      website: "iasp.info/resources/Crisis_Centres",
     },
-    serviceArea: ["Cape Town", "Johannesburg", "Durban"],
+    serviceArea: ["Global"],
   },
   {
-    id: "4",
-    name: "Ghana Occupational Therapy Center",
-    description: "Sensory integration and motor development support",
-    category: "Sensory Processing",
-    country: "Ghana",
-    serviceType: "Clinic",
+    id: "who-mental-health",
+    name: "World Health Organization -- Mental Health",
+    description: "Global information, guidance, and resources on mental health from the WHO.",
+    category: "Information & Education",
+    country: "Global",
+    serviceType: "Information",
     contact: {
-      phone: "+233-24-123456",
-      email: "contact@ot-ghana.org",
-      website: "www.ot-ghana.org",
+      website: "who.int/health-topics/mental-health",
     },
-    serviceArea: ["Accra", "Kumasi", "Takoradi"],
-  },
-  {
-    id: "5",
-    name: "Ethiopia Behavioral Health Institute",
-    description: "Mental health and behavioral support services",
-    category: "Behavioral Health",
-    country: "Ethiopia",
-    serviceType: "Hospital",
-    contact: {
-      phone: "+251-911-123456",
-      email: "info@ebhi.org",
-      website: "www.ebhi.org",
-    },
-    serviceArea: ["Addis Ababa", "Dire Dawa"],
+    serviceArea: ["Global"],
   },
 ]
 
@@ -132,29 +124,31 @@ function mapAllianceResource(r: AllianceResource): Resource {
 // Fetches Alliance's public resource directory when this deployment is
 // federation-enabled, falling back to the static list above on any failure
 // (unset env var, network error, bad response shape) so this page always
-// renders something rather than a broken/empty state.
-async function loadResources(): Promise<Resource[]> {
-  if (!isFederationEnabled()) return staticResources
+// renders something rather than a broken/empty state. Also reports whether
+// the fallback was used, so the page can show a disclaimer that the static
+// list is a minimal global starter set rather than a real regional directory.
+async function loadResources(): Promise<{ resources: Resource[]; isFallback: boolean }> {
+  if (!isFederationEnabled()) return { resources: staticResources, isFallback: true }
 
   const siblingUrl = getSiblingAppUrl()
-  if (!siblingUrl) return staticResources
+  if (!siblingUrl) return { resources: staticResources, isFallback: true }
 
   try {
     const res = await fetch(`${siblingUrl}/api/resources`, { next: { revalidate: 3600 } })
-    if (!res.ok) return staticResources
+    if (!res.ok) return { resources: staticResources, isFallback: true }
 
     const body = await res.json()
-    if (!Array.isArray(body?.resources)) return staticResources
+    if (!Array.isArray(body?.resources)) return { resources: staticResources, isFallback: true }
 
     const mapped = (body.resources as AllianceResource[]).map(mapAllianceResource)
-    return mapped.length > 0 ? mapped : staticResources
+    return mapped.length > 0 ? { resources: mapped, isFallback: false } : { resources: staticResources, isFallback: true }
   } catch {
-    return staticResources
+    return { resources: staticResources, isFallback: true }
   }
 }
 
 export default async function ResourcesPage() {
-  const resources = await loadResources()
+  const { resources, isFallback } = await loadResources()
   const categories = Array.from(new Set(resources.map((r) => r.category)))
   const countries = Array.from(new Set(resources.map((r) => r.country)))
   const serviceTypes = Array.from(new Set(resources.map((r) => r.serviceType)))
@@ -167,13 +161,26 @@ export default async function ResourcesPage() {
           <div className="max-w-3xl">
             <h1 className="text-4xl font-bold mb-2">Support & Resources</h1>
             <p className="text-lg text-muted-foreground">
-              Find professional support services, therapists, and resources across Africa
+              Find professional support services and crisis resources
             </p>
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {isFallback && (
+          <Card className="mb-8 border-amber-200 bg-amber-50">
+            <CardContent className="p-4 flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-800">
+                This is a minimal list of verified, well-known global resources -- not a comprehensive regional
+                directory. If you&apos;re outside the United States, the IASP Crisis Centre Directory below can help
+                you find a local crisis line. In an emergency, contact your local emergency services.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Search & Filter */}
         <Card className="mb-8">
           <CardContent className="p-6">

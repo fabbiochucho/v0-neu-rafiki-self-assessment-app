@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
+import * as Sentry from "@sentry/nextjs"
 import { AlertCircle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,8 +13,8 @@ export interface ErrorBoundaryProps {
 
 export default function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
   useEffect(() => {
-    // Log error for debugging
     console.error("[v0] Error boundary caught:", error)
+    Sentry.captureException(error)
   }, [error])
 
   const isDevelopment = process.env.NODE_ENV === "development"

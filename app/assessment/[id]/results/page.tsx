@@ -140,10 +140,12 @@ export default async function AssessmentResultsPage({ params }: AssessmentResult
                 <span className="text-xl font-bold text-foreground">NeuRafiki</span>
               </div>
             </div>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export Report
-            </Button>
+            <a href={`/api/assessments/${id}/report`} download={`neurafiki-assessment-report-${id}.pdf`}>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export Report
+              </Button>
+            </a>
           </div>
         </div>
       </header>

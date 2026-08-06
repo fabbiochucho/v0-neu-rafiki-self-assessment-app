@@ -48,7 +48,7 @@ export default function HomePage() {
                 Start Free Assessment
               </Button>
             </Link>
-            <Link href="/learn-more">
+            <Link href="/about">
               <Button variant="outline" size="lg" className="w-full sm:w-auto bg-transparent">
                 Learn More
               </Button>
@@ -168,7 +168,19 @@ export default function HomePage() {
       <footer className="border-t py-8 px-4">
         <div className="container mx-auto text-center text-muted-foreground space-y-2">
           <p>&copy; 2025 NeuRafiki. Part of the African Neurodiversity Alliance ecosystem.</p>
-          <p className="flex items-center justify-center gap-4 text-sm">
+          <p className="flex flex-wrap items-center justify-center gap-4 text-sm">
+            <Link href="/about" className="hover:underline">
+              About
+            </Link>
+            <Link href="/faq" className="hover:underline">
+              FAQ
+            </Link>
+            <Link href="/blog" className="hover:underline">
+              Blog
+            </Link>
+            <Link href="/contact" className="hover:underline">
+              Contact
+            </Link>
             <Link href="/privacy" className="hover:underline">
               Privacy Policy
             </Link>
