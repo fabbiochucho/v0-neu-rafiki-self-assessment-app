@@ -41,7 +41,7 @@ export default function FollowupsPage() {
           followup_type,
           next_scheduled_date,
           status,
-          profiles(name)
+          user_profiles(full_name)
         `,
       )
       .order("next_scheduled_date", { ascending: true })
@@ -49,13 +49,13 @@ export default function FollowupsPage() {
     if (error) throw error
     return data?.map((schedule: any) => ({
       ...schedule,
-      profile_name: schedule.profiles?.name,
+      profile_name: schedule.user_profiles?.full_name,
       days_until: Math.ceil((new Date(schedule.next_scheduled_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
     }))
   })
 
   const { data: profiles } = useSWR("/api/profiles", async (url) => {
-    const { data, error } = await supabase.from("profiles").select("id, name")
+    const { data, error } = await supabase.from("user_profiles").select("id, full_name")
     if (error) throw error
     return data
   })
@@ -150,7 +150,7 @@ export default function FollowupsPage() {
                   <SelectContent>
                     {profiles?.map((profile: any) => (
                       <SelectItem key={profile.id} value={profile.id}>
-                        {profile.name}
+                        {profile.full_name}
                       </SelectItem>
                     ))}
                   </SelectContent>
