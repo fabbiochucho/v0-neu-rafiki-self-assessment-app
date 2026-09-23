@@ -190,10 +190,12 @@ export default async function ReportsPage() {
                             View
                           </Button>
                         </Link>
-                        <Button variant="outline" size="sm">
-                          <Download className="h-4 w-4 mr-2" />
-                          Export
-                        </Button>
+                        <a href={`/api/assessments/${assessment.id}/report`} download={`neurafiki-assessment-report-${assessment.id}.pdf`}>
+                          <Button variant="outline" size="sm">
+                            <Download className="h-4 w-4 mr-2" />
+                            Export
+                          </Button>
+                        </a>
                       </div>
                     </div>
                   </CardContent>

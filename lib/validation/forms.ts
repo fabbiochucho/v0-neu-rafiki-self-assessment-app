@@ -79,9 +79,18 @@ export async function validateFormData<T>(schema: z.ZodSchema, data: unknown): P
   }
 }
 
+// Contact form schema
+export const contactSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  subject: z.string().min(3, "Subject must be at least 3 characters"),
+  message: z.string().min(10, "Message must be at least 10 characters").max(5000, "Message is too long"),
+})
+
 // Export types
 export type SignUpFormData = z.infer<typeof signUpSchema>
 export type LoginFormData = z.infer<typeof loginSchema>
 export type ProfileFormData = z.infer<typeof profileSchema>
 export type AssessmentStartData = z.infer<typeof assessmentStartSchema>
 export type OrganizationFormData = z.infer<typeof organizationSchema>
+export type ContactFormData = z.infer<typeof contactSchema>
