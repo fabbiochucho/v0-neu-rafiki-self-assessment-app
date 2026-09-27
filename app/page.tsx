@@ -3,8 +3,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Heart, Users, Shield, Globe } from "lucide-react"
+import { getSiblingAppUrl } from "@/lib/federation/config"
 
 export default function HomePage() {
+  const allianceUrl = getSiblingAppUrl()
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       {/* Header */}
@@ -167,7 +170,17 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t py-8 px-4">
         <div className="container mx-auto text-center text-muted-foreground space-y-2">
-          <p>&copy; 2025 NeuRafiki. Part of the African Neurodiversity Alliance ecosystem.</p>
+          <p>
+            &copy; {new Date().getFullYear()} NeuRafiki. Part of the{" "}
+            {allianceUrl ? (
+              <a href={allianceUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                African Neurodiversity Alliance
+              </a>
+            ) : (
+              "African Neurodiversity Alliance"
+            )}{" "}
+            ecosystem.
+          </p>
           <p className="flex flex-wrap items-center justify-center gap-4 text-sm">
             <Link href="/about" className="hover:underline">
               About
