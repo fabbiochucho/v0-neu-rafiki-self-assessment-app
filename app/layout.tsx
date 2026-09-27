@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
 import { DemoBanner } from "@/components/demo/demo-banner"
 import "./globals.css"
 
@@ -43,6 +44,7 @@ export default function RootLayout({
       <body className="bg-background text-foreground font-sans antialiased">
         <DemoBanner />
         {children}
+        <Analytics />
       </body>
     </html>
   )
