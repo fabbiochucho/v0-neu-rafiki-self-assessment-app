@@ -99,7 +99,7 @@ export default function HomePage() {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  GDPR and NDPR compliant with anonymized data collection and secure storage.
+                  Built with privacy in mind: data is anonymized where possible and stored securely.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -125,7 +125,7 @@ export default function HomePage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Comprehensive Assessment Domains</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Screen across multiple neurodivergent conditions with validated, age-appropriate questionnaires.
+              Screen across multiple neurodivergent conditions with age-appropriate questionnaires.
             </p>
           </div>
 
@@ -156,7 +156,7 @@ export default function HomePage() {
         <div className="container mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Begin Your Journey?</h2>
           <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join thousands of individuals and families who have found clarity and support through NeuRafiki.
+            Join individuals and families who have found clarity and support through NeuRafiki.
           </p>
           <Link href="/auth/sign-up">
             <Button size="lg">Start Your Free Assessment</Button>

@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
 import { DemoBanner } from "@/components/demo/demo-banner"
 import "./globals.css"
 
@@ -17,6 +18,19 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "NeuRafiki - Neurodivergent Self-Assessment",
   description: "Comprehensive neurodivergent self-assessment platform for African communities",
+  openGraph: {
+    title: "NeuRafiki - Neurodivergent Self-Assessment",
+    description: "Comprehensive neurodivergent self-assessment platform for African communities",
+    type: "website",
+    siteName: "NeuRafiki",
+    images: [{ url: "/apple-icon.png", width: 180, height: 180, alt: "NeuRafiki" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "NeuRafiki - Neurodivergent Self-Assessment",
+    description: "Comprehensive neurodivergent self-assessment platform for African communities",
+    images: ["/apple-icon.png"],
+  },
   generator: "v0.app",
 }
 
@@ -30,6 +44,7 @@ export default function RootLayout({
       <body className="bg-background text-foreground font-sans antialiased">
         <DemoBanner />
         {children}
+        <Analytics />
       </body>
     </html>
   )
