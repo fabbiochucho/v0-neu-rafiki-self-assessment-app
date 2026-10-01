@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { useState } from "react"
-import { createBrowserClient } from "@supabase/ssr"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,8 +10,6 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle, Upload, CheckCircle2, Info } from "lucide-react"
-
-const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
 interface EnrollmentResult {
   successful: number
@@ -47,95 +44,39 @@ export default function BulkEnrollmentPage() {
     if (!csvContent || !organizationId) return
 
     setIsLoading(true)
-    let enrollmentId: string | null = null
 
     try {
       const lines = csvContent.trim().split("\n")
       const headers = lines[0].split(",").map((h) => h.trim().toLowerCase())
-      const errors: string[] = []
-      let successful = 0
-      let failed = 0
-      const totalRecords = lines.length - 1
 
-      // Record the upload attempt up front so it's tracked even if the
-      // browser tab closes mid-run; updated with final counts below.
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      const { data: enrollment, error: createError } = await supabase
-        .from("bulk_enrollments")
-        .insert([
-          {
-            organization_id: organizationId,
-            uploaded_by: user?.id,
-            file_name: fileName,
-            total_records: totalRecords,
-            status: "processing",
-          },
-        ])
-        .select()
-        .single()
-
-      if (createError) throw createError
-      enrollmentId = enrollment.id
-
-      // Process each row
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(",").map((v) => v.trim())
-        const rowData: any = {}
-
+      const rows = lines.slice(1).map((line) => {
+        const values = line.split(",").map((v) => v.trim())
+        const row: Record<string, string> = {}
         headers.forEach((header, index) => {
-          rowData[header] = values[index]
+          row[header] = values[index]
         })
+        return row
+      })
 
-        try {
-          // Validate required fields
-          if (!rowData.email || !rowData.name) {
-            throw new Error("Missing required fields: email, name")
-          }
+      // organization_members.user_id is a hard FK to auth.users, so creating
+      // members (and inviting anyone who doesn't have an account yet) has to
+      // happen server-side with the service role -- see
+      // app/api/admin/organizations/[id]/bulk-enroll/route.ts.
+      const res = await fetch(`/api/admin/organizations/${organizationId}/bulk-enroll`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rows, fileName }),
+      })
 
-          // Create user profile in organization
-          const { error } = await supabase.from("organization_members").insert([
-            {
-              organization_id: organizationId,
-              email: rowData.email,
-              name: rowData.name,
-              role: rowData.role || "educator",
-              status: "active",
-            },
-          ])
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Bulk enrollment failed")
 
-          if (error) throw error
-          successful++
-        } catch (err: any) {
-          failed++
-          errors.push(`Row ${i + 1}: ${err.message}`)
-        }
-      }
-
-      await supabase
-        .from("bulk_enrollments")
-        .update({
-          processed_records: successful,
-          failed_records: failed,
-          status: failed === totalRecords ? "failed" : "completed",
-          error_log: errors,
-        })
-        .eq("id", enrollmentId)
-
-      setResult({ successful, failed, errors })
+      setResult({ successful: data.successful, failed: data.failed, errors: data.errors })
     } catch (error: any) {
       console.error("Bulk enrollment error:", error)
-      if (enrollmentId) {
-        await supabase
-          .from("bulk_enrollments")
-          .update({ status: "failed", error_log: [error.message] })
-          .eq("id", enrollmentId)
-      }
       setResult({
         successful: 0,
-        failed: csvContent.split("\n").length,
+        failed: csvContent.trim().split("\n").length - 1,
         errors: [error.message],
       })
     } finally {
@@ -145,7 +86,7 @@ export default function BulkEnrollmentPage() {
 
   const downloadTemplate = () => {
     const template =
-      "email,name,role,class_level\nstudent1@school.com,John Doe,student,Grade 5\nstudent2@school.com,Jane Smith,student,Grade 5"
+      "email,name,role\nteacher1@school.com,Jane Teacher,teacher\nstaff1@school.com,John Staff,member"
     const element = document.createElement("a")
     element.setAttribute("href", "data:text/csv;charset=utf-8," + encodeURIComponent(template))
     element.setAttribute("download", "enrollment_template.csv")
@@ -166,7 +107,9 @@ export default function BulkEnrollmentPage() {
         <Info className="h-4 w-4 text-blue-600" />
         <AlertTitle>CSV Format</AlertTitle>
         <AlertDescription className="text-blue-700">
-          Upload a CSV file with columns: email, name, role, class_level. Download the template to get started.
+          Upload a CSV file with columns: email, name, role (one of admin, teacher, hr_staff, or member -- defaults to
+          member). Download the template to get started. A person with no existing account is sent an invite email;
+          an existing account is just added to this organization.
         </AlertDescription>
       </Alert>
 
@@ -204,7 +147,7 @@ export default function BulkEnrollmentPage() {
             <Textarea
               id="paste"
               placeholder="email,name,role
-participant@school.com,Student Name,student"
+participant@school.com,Participant Name,member"
               value={csvContent}
               onChange={handlePasteCSV}
               rows={6}
