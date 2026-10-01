@@ -8,16 +8,36 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, BookOpen, Users, Clock, BarChart3 } from "lucide-react"
-import type { AssessmentDomain, AssessmentQuestion } from "@/lib/types/assessment"
 
-interface QuestionBankManagerProps {
-  organizationId?: string
-  canEdit?: boolean
+/**
+ * Backed by the real, populated public.assessment_domains / public.questions
+ * tables (6 domains, 974 questions) -- not assessment_questions, which was
+ * part of an earlier schema design that was never finished or seeded. See
+ * scripts/018_complete_institutional_followup_schema.sql for the full story.
+ */
+interface Domain {
+  id: string
+  name: string
+  description: string | null
+  age_groups: string[]
 }
 
-export function QuestionBankManager({ organizationId, canEdit = false }: QuestionBankManagerProps) {
-  const [domains, setDomains] = useState<AssessmentDomain[]>([])
-  const [questions, setQuestions] = useState<AssessmentQuestion[]>([])
+interface Question {
+  id: string
+  domain_id: string
+  question_id: string
+  question_text: string
+  question_type: string
+  options: string[]
+  age_group: string
+  respondent_type: string
+  is_follow_up: boolean
+}
+
+export function QuestionBankManager() {
+  const [domains, setDomains] = useState<Domain[]>([])
+  const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({})
+  const [questions, setQuestions] = useState<Question[]>([])
   const [selectedDomain, setSelectedDomain] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState("")
   const [ageGroupFilter, setAgeGroupFilter] = useState<string>("all")
@@ -41,13 +61,19 @@ export function QuestionBankManager({ organizationId, canEdit = false }: Questio
 
   const loadDomains = async () => {
     try {
-      const { data, error } = await supabase
-        .from("assessment_domains")
-        .select("*")
-        .order("age_min", { ascending: true })
-
+      const { data: domainRows, error } = await supabase.from("assessment_domains").select("*").order("name")
       if (error) throw error
-      setDomains(data || [])
+
+      const { data: questionRows, error: qError } = await supabase.from("questions").select("domain_id")
+      if (qError) throw qError
+
+      const counts: Record<string, number> = {}
+      for (const row of questionRows || []) {
+        counts[row.domain_id] = (counts[row.domain_id] || 0) + 1
+      }
+
+      setDomains(domainRows || [])
+      setQuestionCounts(counts)
     } catch (error) {
       console.error("Error loading domains:", error)
     } finally {
@@ -58,10 +84,10 @@ export function QuestionBankManager({ organizationId, canEdit = false }: Questio
   const loadQuestions = async () => {
     try {
       let query = supabase
-        .from("assessment_questions")
+        .from("questions")
         .select("*")
         .eq("domain_id", selectedDomain)
-        .order("order_index", { ascending: true })
+        .order("question_id", { ascending: true })
 
       if (searchTerm) {
         query = query.ilike("question_text", `%${searchTerm}%`)
@@ -84,19 +110,6 @@ export function QuestionBankManager({ organizationId, canEdit = false }: Questio
     }
   }
 
-  const getAgeGroupLabel = (ageGroup: string) => {
-    switch (ageGroup) {
-      case "toddler":
-        return "Toddlers (2-5 years)"
-      case "child_adolescent":
-        return "Children/Adolescents (6-18 years)"
-      case "adult":
-        return "Adults (18+ years)"
-      default:
-        return ageGroup
-    }
-  }
-
   const getQuestionTypeIcon = (type: string) => {
     switch (type) {
       case "likert":
@@ -105,12 +118,12 @@ export function QuestionBankManager({ organizationId, canEdit = false }: Questio
         return <BookOpen className="h-4 w-4" />
       case "multiple_choice":
         return <Users className="h-4 w-4" />
-      case "scale":
-        return <Clock className="h-4 w-4" />
       default:
         return <BookOpen className="h-4 w-4" />
     }
   }
+
+  const totalQuestions = Object.values(questionCounts).reduce((sum, n) => sum + n, 0)
 
   if (loading) {
     return (
@@ -130,9 +143,7 @@ export function QuestionBankManager({ organizationId, canEdit = false }: Questio
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary">
-            {domains.reduce((total, domain) => total + domain.question_count, 0)} Total Questions
-          </Badge>
+          <Badge variant="secondary">{totalQuestions} Total Questions</Badge>
           <Badge variant="outline">{domains.length} Domains</Badge>
         </div>
       </div>
@@ -141,7 +152,6 @@ export function QuestionBankManager({ organizationId, canEdit = false }: Questio
         <TabsList>
           <TabsTrigger value="domains">Assessment Domains</TabsTrigger>
           <TabsTrigger value="questions">Question Explorer</TabsTrigger>
-          <TabsTrigger value="follow-up">Follow-Up Questions</TabsTrigger>
         </TabsList>
 
         <TabsContent value="domains" className="space-y-4">
@@ -152,32 +162,25 @@ export function QuestionBankManager({ organizationId, canEdit = false }: Questio
                 className="cursor-pointer hover:shadow-md transition-shadow"
                 onClick={() => {
                   setSelectedDomain(domain.id)
-                  // Switch to questions tab
                   const questionsTab = document.querySelector('[value="questions"]') as HTMLElement
                   questionsTab?.click()
                 }}
               >
                 <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{domain.name}</CardTitle>
-                    <Badge variant="outline">{getAgeGroupLabel(domain.age_group)}</Badge>
-                  </div>
+                  <CardTitle className="text-lg">{domain.name}</CardTitle>
                   <CardDescription className="text-sm">{domain.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
-                    <div className="text-sm text-muted-foreground">
-                      Ages {domain.age_min}-{domain.age_max}
+                    <div className="flex flex-wrap gap-1">
+                      {domain.age_groups?.map((group) => (
+                        <Badge key={group} variant="outline" className="text-xs">
+                          {group}
+                        </Badge>
+                      ))}
                     </div>
-                    <Badge variant="secondary">{domain.question_count} questions</Badge>
+                    <Badge variant="secondary">{questionCounts[domain.id] || 0} questions</Badge>
                   </div>
-                  {domain.cultural_adaptations?.african_context && (
-                    <div className="mt-2">
-                      <Badge variant="outline" className="text-xs">
-                        Culturally Adapted
-                      </Badge>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             ))}
@@ -216,9 +219,9 @@ export function QuestionBankManager({ organizationId, canEdit = false }: Questio
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All ages</SelectItem>
-                <SelectItem value="toddler">Toddlers</SelectItem>
-                <SelectItem value="child_adolescent">Children/Teens</SelectItem>
-                <SelectItem value="adult">Adults</SelectItem>
+                <SelectItem value="Toddlers (2-5)">Toddlers (2-5)</SelectItem>
+                <SelectItem value="Children/Adolescents (6-18)">Children/Adolescents (6-18)</SelectItem>
+                <SelectItem value="Adults (18+)">Adults (18+)</SelectItem>
               </SelectContent>
             </Select>
             <Select value={respondentFilter} onValueChange={setRespondentFilter}>
@@ -228,9 +231,9 @@ export function QuestionBankManager({ organizationId, canEdit = false }: Questio
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>
                 <SelectItem value="self">Self</SelectItem>
-                <SelectItem value="parent">Parent</SelectItem>
+                <SelectItem value="parent_caregiver">Parent/Caregiver</SelectItem>
                 <SelectItem value="teacher">Teacher</SelectItem>
-                <SelectItem value="caregiver">Caregiver</SelectItem>
+                <SelectItem value="therapist">Therapist</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -247,7 +250,12 @@ export function QuestionBankManager({ organizationId, canEdit = false }: Questio
                           <p className="text-sm font-medium leading-relaxed">
                             {index + 1}. {question.question_text}
                           </p>
-                          <div className="flex gap-2 ml-4">
+                          <div className="flex gap-2 ml-4 flex-shrink-0">
+                            {question.is_follow_up && (
+                              <Badge variant="default" className="text-xs">
+                                Follow-up
+                              </Badge>
+                            )}
                             <Badge variant="outline" className="text-xs">
                               {question.respondent_type}
                             </Badge>
@@ -257,16 +265,10 @@ export function QuestionBankManager({ organizationId, canEdit = false }: Questio
                           </div>
                         </div>
 
-                        {question.cultural_context?.cultural_notes && (
-                          <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-                            <strong>Cultural Note:</strong> {question.cultural_context.cultural_notes}
-                          </div>
-                        )}
-
                         <div className="flex flex-wrap gap-1">
-                          {question.response_options.options.map((option, optionIndex) => (
+                          {question.options?.map((option, optionIndex) => (
                             <Badge key={optionIndex} variant="outline" className="text-xs">
-                              {option.label}
+                              {option}
                             </Badge>
                           ))}
                         </div>
@@ -285,47 +287,6 @@ export function QuestionBankManager({ organizationId, canEdit = false }: Questio
           {selectedDomain === "all" && (
             <div className="text-center py-8 text-muted-foreground">Select a domain to view questions.</div>
           )}
-        </TabsContent>
-
-        <TabsContent value="follow-up" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Follow-Up Assessment Framework</CardTitle>
-              <CardDescription>Longitudinal monitoring questions for tracking progress over time</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <h4 className="font-medium">Progress Tracking Areas</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Behavioral changes</li>
-                    <li>• Cognitive progress</li>
-                    <li>• Sensory and motor improvements</li>
-                    <li>• Social-emotional skills</li>
-                    <li>• Adaptive skills / functional outcomes</li>
-                  </ul>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="font-medium">Follow-Up Intervals</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Weekly (intensive interventions)</li>
-                    <li>• Monthly (regular monitoring)</li>
-                    <li>• Quarterly (standard follow-up)</li>
-                    <li>• Biannually (long-term tracking)</li>
-                  </ul>
-                </div>
-              </div>
-              <div className="pt-4 border-t">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Total Follow-Up Questions</span>
-                  <Badge variant="secondary">~1,800 questions</Badge>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Approximately 100 follow-up questions per age group/domain combination
-                </p>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>

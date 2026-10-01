@@ -22,6 +22,7 @@ interface EnrollmentResult {
 
 export default function BulkEnrollmentPage() {
   const [csvContent, setCsvContent] = useState("")
+  const [fileName, setFileName] = useState("pasted-data.csv")
   const [organizationId, setOrganizationId] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<EnrollmentResult | null>(null)
@@ -29,6 +30,7 @@ export default function BulkEnrollmentPage() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      setFileName(file.name)
       const reader = new FileReader()
       reader.onload = (event) => {
         setCsvContent(event.target?.result as string)
@@ -45,12 +47,38 @@ export default function BulkEnrollmentPage() {
     if (!csvContent || !organizationId) return
 
     setIsLoading(true)
+    let enrollmentId: string | null = null
+
     try {
       const lines = csvContent.trim().split("\n")
       const headers = lines[0].split(",").map((h) => h.trim().toLowerCase())
       const errors: string[] = []
       let successful = 0
       let failed = 0
+      const totalRecords = lines.length - 1
+
+      // Record the upload attempt up front so it's tracked even if the
+      // browser tab closes mid-run; updated with final counts below.
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      const { data: enrollment, error: createError } = await supabase
+        .from("bulk_enrollments")
+        .insert([
+          {
+            organization_id: organizationId,
+            uploaded_by: user?.id,
+            file_name: fileName,
+            total_records: totalRecords,
+            status: "processing",
+          },
+        ])
+        .select()
+        .single()
+
+      if (createError) throw createError
+      enrollmentId = enrollment.id
 
       // Process each row
       for (let i = 1; i < lines.length; i++) {
@@ -86,9 +114,25 @@ export default function BulkEnrollmentPage() {
         }
       }
 
+      await supabase
+        .from("bulk_enrollments")
+        .update({
+          processed_records: successful,
+          failed_records: failed,
+          status: failed === totalRecords ? "failed" : "completed",
+          error_log: errors,
+        })
+        .eq("id", enrollmentId)
+
       setResult({ successful, failed, errors })
     } catch (error: any) {
       console.error("Bulk enrollment error:", error)
+      if (enrollmentId) {
+        await supabase
+          .from("bulk_enrollments")
+          .update({ status: "failed", error_log: [error.message] })
+          .eq("id", enrollmentId)
+      }
       setResult({
         successful: 0,
         failed: csvContent.split("\n").length,
