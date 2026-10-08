@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     const { data: subscription, error: subError } = await supabase
       .from("subscriptions")
       .insert({
-        profile_id: user.id,
+        user_id: user.id,
         tier,
         status: "pending",
       })

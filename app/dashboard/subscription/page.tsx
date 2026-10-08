@@ -62,7 +62,7 @@ export default function SubscriptionPage() {
       const { data } = await supabase
         .from("subscriptions")
         .select("tier, status, renewal_date")
-        .eq("profile_id", user.id)
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle()
