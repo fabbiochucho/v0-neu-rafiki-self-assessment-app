@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-import { Heart, Plus, Users, BarChart3, Calendar } from "lucide-react"
+import { Heart, Plus, Users, BarChart3, Calendar, CreditCard } from "lucide-react"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -58,6 +58,12 @@ export default async function DashboardPage() {
                 <Button variant="ghost" size="sm">
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Reports
+                </Button>
+              </Link>
+              <Link href="/dashboard/subscription">
+                <Button variant="ghost" size="sm">
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Subscription
                 </Button>
               </Link>
               <form action="/auth/signout" method="post">
