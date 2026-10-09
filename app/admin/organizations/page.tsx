@@ -10,20 +10,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Edit2, Trash2, Users } from "lucide-react"
 
 const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
+// Matches the real live schema (004_expand_institutional_schema.sql):
+// organizations(id, name, domain, admin_user_id, subscription_tier,
+// max_profiles, created_at, updated_at). The previous version of this page
+// queried description/organization_type/member_count, none of which exist
+// on this table -- it rendered without erroring, just silently blank, which
+// is how the mismatch went unnoticed (see the ANDA + NeuRafiki audit, Section D).
 interface Organization {
   id: string
   name: string
-  description: string
-  country: string
-  organization_type: string
+  domain: string | null
+  admin_user_id: string
   subscription_tier: string
-  member_count: number
+  max_profiles: number
   created_at: string
+  member_count: number
 }
 
 export default function OrganizationsPage() {
@@ -31,29 +36,53 @@ export default function OrganizationsPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
-    country: "",
-    organization_type: "school",
+    domain: "",
+    max_profiles: 5,
   })
 
   const { data: organizations, mutate } = useSWR<Organization[]>("/api/organizations", async (url: string) => {
-    const { data, error } = await supabase.from("organizations").select("*").order("created_at", { ascending: false })
+    const { data: orgs, error } = await supabase
+      .from("organizations")
+      .select("*")
+      .order("created_at", { ascending: false })
     if (error) throw error
-    return data
+
+    const { data: members } = await supabase.from("organization_members").select("organization_id")
+    const counts = new Map<string, number>()
+    for (const row of members || []) {
+      counts.set(row.organization_id, (counts.get(row.organization_id) || 0) + 1)
+    }
+
+    return (orgs || []).map((org) => ({ ...org, member_count: counts.get(org.id) || 0 }))
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       if (editingId) {
-        const { error } = await supabase.from("organizations").update(formData).eq("id", editingId)
+        const { error } = await supabase
+          .from("organizations")
+          .update({ name: formData.name, domain: formData.domain || null, max_profiles: formData.max_profiles })
+          .eq("id", editingId)
         if (error) throw error
       } else {
-        const { error } = await supabase.from("organizations").insert([formData])
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (!user) throw new Error("Not signed in")
+
+        const { error } = await supabase.from("organizations").insert([
+          {
+            name: formData.name,
+            domain: formData.domain || null,
+            max_profiles: formData.max_profiles,
+            admin_user_id: user.id,
+          },
+        ])
         if (error) throw error
       }
       mutate()
-      setFormData({ name: "", description: "", country: "", organization_type: "school" })
+      setFormData({ name: "", domain: "", max_profiles: 5 })
       setEditingId(null)
       setIsOpen(false)
     } catch (error) {
@@ -74,12 +103,7 @@ export default function OrganizationsPage() {
   }
 
   const handleEdit = (org: Organization) => {
-    setFormData({
-      name: org.name,
-      description: org.description,
-      country: org.country,
-      organization_type: org.organization_type,
-    })
+    setFormData({ name: org.name, domain: org.domain || "", max_profiles: org.max_profiles })
     setEditingId(org.id)
     setIsOpen(true)
   }
@@ -113,41 +137,24 @@ export default function OrganizationsPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="domain">Email Domain (optional)</Label>
                 <Input
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  id="domain"
+                  value={formData.domain}
+                  onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
+                  placeholder="e.g., school.edu"
                 />
               </div>
               <div>
-                <Label htmlFor="country">Country</Label>
+                <Label htmlFor="max_profiles">Max Profiles</Label>
                 <Input
-                  id="country"
-                  value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  placeholder="e.g., Kenya, Nigeria"
+                  id="max_profiles"
+                  type="number"
+                  min={1}
+                  value={formData.max_profiles}
+                  onChange={(e) => setFormData({ ...formData, max_profiles: Number(e.target.value) || 1 })}
                   required
                 />
-              </div>
-              <div>
-                <Label htmlFor="type">Organization Type</Label>
-                <Select
-                  value={formData.organization_type}
-                  onValueChange={(value) => setFormData({ ...formData, organization_type: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="school">School</SelectItem>
-                    <SelectItem value="ngo">NGO</SelectItem>
-                    <SelectItem value="clinic">Clinic</SelectItem>
-                    <SelectItem value="hospital">Hospital</SelectItem>
-                    <SelectItem value="research">Research Institution</SelectItem>
-                    <SelectItem value="corporate">Corporate</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
               <Button type="submit" className="w-full">
                 {editingId ? "Update Organization" : "Create Organization"}
@@ -172,20 +179,14 @@ export default function OrganizationsPage() {
                   </Button>
                 </div>
               </CardTitle>
-              <CardDescription>{org.description}</CardDescription>
+              {org.domain && <CardDescription>{org.domain}</CardDescription>}
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Location:</span>
-                <span>{org.country}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Type:</span>
-                <span className="capitalize">{org.organization_type}</span>
-              </div>
-              <div className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                <span>{org.member_count || 0} members</span>
+                <span>
+                  {org.member_count} / {org.max_profiles} profiles
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground">Tier:</span>

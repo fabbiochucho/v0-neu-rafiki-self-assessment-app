@@ -1,5 +1,15 @@
 -- Expand database schema for institutional accounts and comprehensive assessment system
 -- Based on pasted-text-3 (institutional features) and pasted-text-4 (question breakdown)
+--
+-- HISTORICAL NOTE (see ANDA + NeuRafiki audit, Section D): the
+-- `DROP TABLE assessment_domains` / replacement-schema block below never
+-- completed in production -- live assessment_domains is still on the
+-- original 001 schema, with 974 real questions already seeded into it
+-- (018_complete_institutional_followup_schema.sql has the full story).
+-- That block has been commented out so this file can never be re-run
+-- (in full or by copy-paste) and destroy the real, populated domains table.
+-- organizations/organization_members below did apply successfully and are
+-- live -- only the assessment_domains/assessment_questions block is dead.
 
 -- Add account types and organization support
 ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS account_type VARCHAR(20) DEFAULT 'individual' CHECK (account_type IN ('individual', 'organization'));
@@ -30,37 +40,39 @@ CREATE TABLE IF NOT EXISTS organization_members (
     UNIQUE(organization_id, user_id)
 );
 
--- Expand assessment domains table with comprehensive framework
-DROP TABLE IF EXISTS assessment_domains CASCADE;
-CREATE TABLE assessment_domains (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
-    code TEXT UNIQUE NOT NULL,
-    age_group VARCHAR(20) NOT NULL CHECK (age_group IN ('toddler', 'child_adolescent', 'adult')),
-    age_min INTEGER NOT NULL,
-    age_max INTEGER NOT NULL,
-    question_count INTEGER NOT NULL,
-    description TEXT,
-    cultural_adaptations JSONB DEFAULT '{}',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create comprehensive questions table based on pasted-text-4 breakdown
-CREATE TABLE IF NOT EXISTS assessment_questions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    domain_id UUID REFERENCES assessment_domains(id) ON DELETE CASCADE,
-    question_text TEXT NOT NULL,
-    question_type VARCHAR(20) DEFAULT 'likert' CHECK (question_type IN ('likert', 'yes_no', 'multiple_choice', 'scale')),
-    response_options JSONB NOT NULL,
-    age_group VARCHAR(20) NOT NULL CHECK (age_group IN ('toddler', 'child_adolescent', 'adult')),
-    respondent_type VARCHAR(20) DEFAULT 'self' CHECK (respondent_type IN ('self', 'parent', 'teacher', 'caregiver')),
-    cultural_context JSONB DEFAULT '{}',
-    scoring_weight DECIMAL(3,2) DEFAULT 1.0,
-    order_index INTEGER NOT NULL,
-    is_follow_up BOOLEAN DEFAULT FALSE,
-    baseline_question_id UUID REFERENCES assessment_questions(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- DEAD, NEVER RUN (see historical note at top of file). Left as a comment
+-- for reference only -- do not uncomment. Live assessment_domains is the
+-- original 001 schema; assessment_questions was never created at all.
+--
+-- DROP TABLE IF EXISTS assessment_domains CASCADE;
+-- CREATE TABLE assessment_domains (
+--     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+--     name TEXT NOT NULL,
+--     code TEXT UNIQUE NOT NULL,
+--     age_group VARCHAR(20) NOT NULL CHECK (age_group IN ('toddler', 'child_adolescent', 'adult')),
+--     age_min INTEGER NOT NULL,
+--     age_max INTEGER NOT NULL,
+--     question_count INTEGER NOT NULL,
+--     description TEXT,
+--     cultural_adaptations JSONB DEFAULT '{}',
+--     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- );
+--
+-- CREATE TABLE IF NOT EXISTS assessment_questions (
+--     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+--     domain_id UUID REFERENCES assessment_domains(id) ON DELETE CASCADE,
+--     question_text TEXT NOT NULL,
+--     question_type VARCHAR(20) DEFAULT 'likert' CHECK (question_type IN ('likert', 'yes_no', 'multiple_choice', 'scale')),
+--     response_options JSONB NOT NULL,
+--     age_group VARCHAR(20) NOT NULL CHECK (age_group IN ('toddler', 'child_adolescent', 'adult')),
+--     respondent_type VARCHAR(20) DEFAULT 'self' CHECK (respondent_type IN ('self', 'parent', 'teacher', 'caregiver')),
+--     cultural_context JSONB DEFAULT '{}',
+--     scoring_weight DECIMAL(3,2) DEFAULT 1.0,
+--     order_index INTEGER NOT NULL,
+--     is_follow_up BOOLEAN DEFAULT FALSE,
+--     baseline_question_id UUID REFERENCES assessment_questions(id),
+--     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- );
 
 -- Create follow-up assessments table for longitudinal monitoring
 CREATE TABLE IF NOT EXISTS follow_up_assessments (
