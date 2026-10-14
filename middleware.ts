@@ -21,5 +21,6 @@ export const config = {
     "/admin/:path*",
     "/assessment/:path*",
     "/connect",
+    "/check-in",
   ],
 }

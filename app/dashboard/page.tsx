@@ -61,6 +61,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                   Reports
                 </Button>
               </Link>
+              <Link href="/check-in">
+                <Button variant="ghost" size="sm">
+                  <Calendar className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Check-ins
+                </Button>
+              </Link>
               <Link href="/dashboard/subscription">
                 <Button variant="ghost" size="sm">
                   <CreditCard className="h-4 w-4 mr-2" />
