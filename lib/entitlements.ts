@@ -1,3 +1,4 @@
+import { aiProvider } from "@/lib/ai"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 // NeuRafiki's own plan and entitlements. Billing is NeuRafiki-only
@@ -30,7 +31,7 @@ export async function getPlan(supabase: SupabaseClient, userId: string): Promise
 }
 
 export function isCompanionConfigured(): boolean {
-  return Boolean(process.env.ANTHROPIC_API_KEY)
+  return aiProvider() !== null
 }
 
 export function entitlementsFor(plan: Plan): Entitlements {
