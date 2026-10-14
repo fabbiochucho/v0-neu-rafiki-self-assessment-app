@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk"
+import { generate, type ChatTurn } from "@/lib/ai"
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createServiceRoleClient } from "@/lib/supabase/service"
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
   }
 
   const raw = Array.isArray(body.messages) ? body.messages.slice(-MAX_TURNS) : []
-  const messages: Anthropic.MessageParam[] = []
+  const messages: ChatTurn[] = []
   for (const [i, m] of raw.entries()) {
     const role = (m as { role?: unknown })?.role
     const content = (m as { content?: unknown })?.content
@@ -123,30 +123,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Please wait a moment before sending another message." }, { status: 429 })
   }
 
-  try {
-    const client = new Anthropic()
-    const response = await client.messages.create({
-      model: process.env.ANTHROPIC_MODEL || "claude-haiku-5-5",
-      max_tokens: 2048,
-      output_config: { effort: "low" },
-      system: systemPromptFor(mode, context),
-      messages,
-    })
-    if (response.stop_reason === "refusal") {
+  const result = await generate({ system: systemPromptFor(mode, context), messages, maxTokens: 1024 })
+  if (!result.ok) {
+    if (result.reason === "refused") {
       return NextResponse.json({ reply: "I can't help with that here. I can explain the screening, the questions, or your results." })
     }
-    const text = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("\n")
-      .trim()
-    const reply = !text ? "Sorry, I don't have an answer for that." : containsDiagnosticClaim(text) ? DIAGNOSTIC_FALLBACK : text
-    return NextResponse.json({ reply })
-  } catch (error) {
-    if (error instanceof Anthropic.RateLimitError) {
-      return NextResponse.json({ error: "The companion is busy. Please try again shortly." }, { status: 503 })
+    if (result.reason === "busy") {
+      // Includes the free daily AI allowance running out; it resets at midnight UTC.
+      return NextResponse.json({ error: "The companion is busy or has reached today's limit. Please try again later." }, { status: 503 })
     }
-    console.error("[api/companion] model call failed:", error instanceof Anthropic.APIError ? error.status : error)
     return NextResponse.json({ error: "The companion is unavailable right now" }, { status: 502 })
   }
+  const text = result.text
+  // Open models are more likely to slip into diagnostic language; the same
+  // check replaces any such reply.
+  const reply = !text ? "Sorry, I don't have an answer for that." : containsDiagnosticClaim(text) ? DIAGNOSTIC_FALLBACK : text
+  return NextResponse.json({ reply })
 }
