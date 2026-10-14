@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
+import { INFORMANTS, ageBandForAge, estimateMinutes, profileAge as getProfileAge } from "@/lib/assessment/journey"
 
 const ASSESSMENT_CONSENT_VERSION = "1.0"
 
@@ -34,13 +35,15 @@ interface AssessmentDomain {
 interface AssessmentStartFormProps {
   userProfiles: UserProfile[]
   domains: AssessmentDomain[]
+  /** "age_group|respondent_type|domain_id|is_follow_up" -> question count, from the live question bank. */
+  questionCounts: Record<string, number>
 }
 
-export function AssessmentStartForm({ userProfiles, domains }: AssessmentStartFormProps) {
+export function AssessmentStartForm({ userProfiles, domains, questionCounts }: AssessmentStartFormProps) {
   const [selectedProfile, setSelectedProfile] = useState<string>("")
   const [assessmentType, setAssessmentType] = useState<string>("baseline")
   const [selectedDomains, setSelectedDomains] = useState<string[]>([])
-  const [respondentType, setRespondentType] = useState<string>("")
+  const [informant, setInformant] = useState<string>("")
   const [assessmentSubject, setAssessmentSubject] = useState<"self" | "child">("self")
   const [childConsent, setChildConsent] = useState(false)
   const [guardianRelationship, setGuardianRelationship] = useState("")
@@ -51,17 +54,21 @@ export function AssessmentStartForm({ userProfiles, domains }: AssessmentStartFo
   const supabase = createClient()
 
   const selectedProfileData = userProfiles.find((p) => p.id === selectedProfile)
-  const profileAge = selectedProfileData?.age || 0
+  const profileAge = getProfileAge(selectedProfileData ?? null)
+  const ageBand = ageBandForAge(profileAge)
+  const ageGroup = ageBand.dbAgeGroup
+  const respondentType = INFORMANTS.find((i) => i.key === informant)?.respondentType ?? ""
 
-  // Determine age group for filtering domains
-  const getAgeGroup = (age: number) => {
-    if (age <= 5) return "Toddlers (2-5)"
-    if (age <= 18) return "Children/Adolescents (6-18)"
-    return "Adults (18+)"
-  }
-
-  const ageGroup = getAgeGroup(profileAge)
-  const availableDomains = domains.filter((domain) => domain.age_groups.includes(ageGroup))
+  // Data-driven: only offer informants and areas that actually have
+  // questions in the bank for this age group.
+  const countFor = (rt: string, domainId: string) => questionCounts[`${ageGroup}|${rt}|${domainId}|${assessmentType === "follow_up"}`] || 0
+  const availableInformants = INFORMANTS.filter((i) => domains.some((d) => countFor(i.respondentType, d.id) > 0))
+  const availableDomains = domains.filter(
+    (domain) => domain.age_groups.includes(ageGroup) && (!respondentType || countFor(respondentType, domain.id) > 0),
+  )
+  const selectedQuestionCount = respondentType
+    ? selectedDomains.reduce((sum, id) => sum + countFor(respondentType, id), 0)
+    : 0
 
   // Default the consent-step subject based on the selected profile's age, so
   // a profile for a minor doesn't silently default to "myself".
@@ -69,8 +76,15 @@ export function AssessmentStartForm({ userProfiles, domains }: AssessmentStartFo
     if (selectedProfileData) {
       setAssessmentSubject(profileAge > 0 && profileAge < 18 ? "child" : "self")
       setChildConsent(false)
+      setInformant("")
+      setSelectedDomains([])
     }
-  }, [selectedProfile])
+  }, [selectedProfile]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Drop any selected areas that have no questions for a newly chosen informant.
+  useEffect(() => {
+    setSelectedDomains((prev) => prev.filter((id) => availableDomains.some((d) => d.id === id)))
+  }, [informant, assessmentType]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDomainToggle = (domainId: string) => {
     setSelectedDomains((prev) => (prev.includes(domainId) ? prev.filter((id) => id !== domainId) : [...prev, domainId]))
@@ -151,15 +165,17 @@ export function AssessmentStartForm({ userProfiles, domains }: AssessmentStartFo
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Assessment Configuration</CardTitle>
-        <CardDescription>Configure your assessment settings before beginning.</CardDescription>
+        <CardTitle>Set up the screening</CardTitle>
+        <CardDescription>
+          A few choices so we show the right questions. You can pause at any point and pick up where you left off.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Profile Selection */}
         <div className="space-y-2">
           <Label htmlFor="profile">Who are you assessing? *</Label>
           <Select value={selectedProfile} onValueChange={setSelectedProfile}>
-            <SelectTrigger>
+            <SelectTrigger id="profile">
               <SelectValue placeholder="Select a profile" />
             </SelectTrigger>
             <SelectContent>
@@ -188,29 +204,34 @@ export function AssessmentStartForm({ userProfiles, domains }: AssessmentStartFo
           </RadioGroup>
         </div>
 
-        {/* Respondent Type */}
+        {/* Informant */}
         {selectedProfile && (
           <div className="space-y-2">
-            <Label htmlFor="respondent">Who is completing this assessment? *</Label>
-            <Select value={respondentType} onValueChange={setRespondentType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select respondent type" />
+            <Label htmlFor="respondent">Who is answering the questions? *</Label>
+            <Select value={informant} onValueChange={setInformant}>
+              <SelectTrigger id="respondent">
+                <SelectValue placeholder="Select who is answering" />
               </SelectTrigger>
               <SelectContent>
-                {profileAge >= 18 && <SelectItem value="self">Self-report</SelectItem>}
-                <SelectItem value="parent_caregiver">Parent/Caregiver</SelectItem>
-                <SelectItem value="teacher">Teacher</SelectItem>
-                <SelectItem value="therapist">Therapist/Professional</SelectItem>
+                {availableInformants.map((i) => (
+                  <SelectItem key={i.key} value={i.key}>
+                    {i.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              Different people see the person in different settings. Only people with a question set for{" "}
+              {ageBand.label.toLowerCase()} are listed.
+            </p>
           </div>
         )}
 
         {/* Domain Selection */}
-        {selectedProfile && (
+        {selectedProfile && respondentType && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label>Assessment Domains * (Age group: {ageGroup})</Label>
+              <Label>Areas to explore * ({ageBand.label})</Label>
               <Button variant="outline" size="sm" onClick={handleSelectAllDomains} type="button">
                 {selectedDomains.length === availableDomains.length ? "Deselect All" : "Select All"}
               </Button>
@@ -302,6 +323,13 @@ export function AssessmentStartForm({ userProfiles, domains }: AssessmentStartFo
           </div>
         )}
 
+        {selectedQuestionCount > 0 && (
+          <p className="text-sm text-muted-foreground" aria-live="polite">
+            {selectedQuestionCount} questions in total, about {estimateMinutes(selectedQuestionCount)} minutes. Answers save
+            as you go.
+          </p>
+        )}
+
         {error && (
           <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
             {error}
@@ -323,10 +351,10 @@ export function AssessmentStartForm({ userProfiles, domains }: AssessmentStartFo
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Starting Assessment...
+                Starting…
               </>
             ) : (
-              "Start Assessment"
+              "Begin screening"
             )}
           </Button>
         </div>

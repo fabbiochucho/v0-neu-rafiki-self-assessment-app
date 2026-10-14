@@ -29,7 +29,9 @@ function LoginForm() {
   // Supports being sent here as /auth/login?redirect=/connect?token=... (see
   // app/connect/page.tsx, which redirects here first if the user isn't
   // logged in yet) as well as plain logins, which fall back to /dashboard.
-  const redirectTo = searchParams.get("redirect") || "/dashboard"
+  // Same-origin paths only, so ?redirect= can't bounce people to another site.
+  const requested = searchParams.get("redirect")
+  const redirectTo = requested && /^\/(?![/\\])/.test(requested) ? requested : "/dashboard"
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()

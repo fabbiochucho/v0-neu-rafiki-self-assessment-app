@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Heart, Plus, Users, BarChart3, Calendar, CreditCard } from "lucide-react"
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ paused?: string }> }) {
+  const { paused } = await searchParams
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.getUser()
@@ -77,6 +78,12 @@ export default async function DashboardPage() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {paused && (
+          <div role="status" className="mb-6 p-4 bg-primary/10 border border-primary/30 rounded-lg text-sm">
+            Your answers are saved. Choose &quot;Continue&quot; next to the screening below whenever you&apos;re ready.
+          </div>
+        )}
+
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Welcome back, {profile?.full_name || "User"}!</h1>
@@ -206,9 +213,23 @@ export default async function DashboardPage() {
                         </p>
                         <p className="text-sm text-muted-foreground">{assessment.domains.join(", ")}</p>
                       </div>
-                      <Badge variant={assessment.status === "completed" ? "default" : "secondary"}>
-                        {assessment.status}
-                      </Badge>
+                      <div className="flex items-center gap-3">
+                        <Badge variant={assessment.status === "completed" ? "default" : "secondary"}>
+                          {assessment.status === "in_progress" ? "in progress" : assessment.status}
+                        </Badge>
+                        {assessment.status === "in_progress" && (
+                          <Link href={`/assessment/${assessment.id}/questions`}>
+                            <Button size="sm">Continue</Button>
+                          </Link>
+                        )}
+                        {assessment.status === "completed" && (
+                          <Link href={`/assessment/${assessment.id}/results`}>
+                            <Button size="sm" variant="outline">
+                              View results
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
