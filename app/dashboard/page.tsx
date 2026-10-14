@@ -67,10 +67,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                   Check-ins
                 </Button>
               </Link>
-              <Link href="/dashboard/subscription">
+              <Link href="/account">
                 <Button variant="ghost" size="sm">
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Subscription
+                  <CreditCard className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Account
                 </Button>
               </Link>
               <form action="/auth/signout" method="post">

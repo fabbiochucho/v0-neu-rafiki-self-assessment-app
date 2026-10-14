@@ -39,11 +39,11 @@ export default function HomePage() {
             Culturally Adapted for African Communities
           </Badge>
           <h1 className="text-4xl md:text-6xl font-bold text-balance mb-6">
-            Understand Your <span className="text-primary">Neurodivergent</span> Journey
+            Assess. Understand. <span className="text-primary">Accompany.</span>
           </h1>
           <p className="text-xl text-muted-foreground text-pretty mb-8 max-w-2xl mx-auto">
-            Comprehensive, privacy-first self-assessment tools for autism, ADHD, dyslexia, and other neurodivergent
-            conditions. Built with African cultural context in mind.
+            A structured neurodevelopmental assessment platform with an intelligent companion that helps you understand
+            your results and navigate your next steps.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth/sign-up">
@@ -60,13 +60,47 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Three pillars */}
+      <section aria-labelledby="pillars-heading" className="py-12 px-4">
+        <div className="container mx-auto max-w-5xl">
+          <h2 id="pillars-heading" className="sr-only">
+            How NeuRafiki works
+          </h2>
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              {
+                title: "Assess",
+                text: "A high-depth screening across autism, ADHD, learning, motor, sensory and executive-function areas, one area at a time, answered by the person or by a parent, caregiver, teacher or professional. It is screening, not a diagnosis.",
+              },
+              {
+                title: "Understand",
+                text: "Clear, area-by-area results, with a companion that explains what they mean in plain language and keeps its explanations separate from your scores.",
+              },
+              {
+                title: "Accompany",
+                text: "Practical next steps, questions to bring to professionals and educators, and short check-ins that track how goals are going over time.",
+              },
+            ].map((pillar) => (
+              <Card key={pillar.title}>
+                <CardHeader>
+                  <CardTitle className="text-2xl">{pillar.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-base">{pillar.text}</CardDescription>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-16 px-4">
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Why Choose NeuRafiki?</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Our platform combines evidence-based assessments with cultural sensitivity and privacy protection.
+              Structured screening with cultural sensitivity and privacy built in.
             </p>
           </div>
 
@@ -159,7 +193,7 @@ export default function HomePage() {
         <div className="container mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Begin Your Journey?</h2>
           <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join individuals and families who have found clarity and support through NeuRafiki.
+            Start with a free screening. You can pause at any time and pick up where you left off.
           </p>
           <Link href="/auth/sign-up">
             <Button size="lg">Start Your Free Assessment</Button>

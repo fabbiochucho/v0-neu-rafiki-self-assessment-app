@@ -22,5 +22,6 @@ export const config = {
     "/assessment/:path*",
     "/connect",
     "/check-in",
+    "/account",
   ],
 }

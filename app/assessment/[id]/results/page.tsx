@@ -10,6 +10,7 @@ import { Heart, ArrowLeft, Download, Calendar, TrendingUp, AlertCircle, CheckCir
 import { ResultsCharts } from "@/components/assessment/results-charts"
 import { Companion } from "@/components/companion/companion"
 import { isCompanionConfigured } from "@/lib/entitlements"
+import { getSiblingAppUrl } from "@/lib/federation/config"
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Bar, PieChart, Pie, Cell } from "recharts"
 
 interface AssessmentResultsPageProps {
@@ -51,6 +52,7 @@ export default async function AssessmentResultsPage({ params }: AssessmentResult
     redirect("/dashboard")
   }
 
+  const andaUrl = getSiblingAppUrl()
   const results = assessment.assessment_results || []
   const completedDate = new Date(assessment.completed_at).toLocaleDateString()
 
@@ -199,6 +201,29 @@ export default async function AssessmentResultsPage({ params }: AssessmentResult
             </Card>
           </div>
         </div>
+
+        {/* Completion + handoff to ANDA (cross-app contract) */}
+        {assessment.status === "completed" && (
+          <Card className="mb-8 border-primary/30 bg-primary/5">
+            <CardHeader>
+              <CardTitle>Your assessment is complete.</CardTitle>
+              <CardDescription className="text-base text-foreground">
+                Now let&apos;s turn what you&apos;ve learned into a practical support plan.
+              </CardDescription>
+            </CardHeader>
+            {andaUrl && (
+              <CardContent className="space-y-3">
+                <a href={`${andaUrl}/welcome/from-neurafiki?assessment=${encodeURIComponent(id)}`}>
+                  <Button>Continue to ANDA</Button>
+                </a>
+                <p className="text-sm text-muted-foreground">
+                  ANDA, our sister service, helps you build a support plan. Continuing doesn&apos;t require an ANDA
+                  subscription, and nothing from this screening is shared until you choose to share it.
+                </p>
+              </CardContent>
+            )}
+          </Card>
+        )}
 
         {/* Results by Domain */}
         <div className="space-y-6">

@@ -9,12 +9,13 @@ import { AssessmentStartForm } from "@/components/assessment/assessment-start-fo
 import { Companion } from "@/components/companion/companion"
 import { isCompanionConfigured } from "@/lib/entitlements"
 
-export default async function AssessmentStartPage() {
+export default async function AssessmentStartPage({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
+  const { from } = await searchParams
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.getUser()
   if (error || !data?.user) {
-    redirect("/auth/login?redirect=%2Fassessment%2Fstart")
+    redirect(`/auth/login?redirect=${encodeURIComponent(from === "anda" ? "/assessment/start?from=anda" : "/assessment/start")}`)
   }
 
   // Get user profiles
@@ -72,6 +73,12 @@ export default async function AssessmentStartPage() {
             A high-depth screening, taken one area at a time. It offers structured screening and referral support; it
             does not diagnose any condition.
           </p>
+          {from === "anda" && (
+            <p role="status" className="mt-4 p-3 rounded-lg border bg-primary/5 text-sm">
+              Welcome from ANDA. This screening happens in NeuRafiki, and your answers stay here. Afterwards you can
+              choose whether to share a summary of the results with ANDA.
+            </p>
+          )}
         </div>
 
         {userProfiles && userProfiles.length === 0 ? (

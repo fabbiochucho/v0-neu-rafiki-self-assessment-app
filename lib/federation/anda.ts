@@ -40,3 +40,36 @@ export async function sendCheckInSummary(caller: Caller, payload: CheckInSummary
   })
   return res.ok
 }
+
+export interface AndaEntitlements {
+  product: "anda"
+  plan: string
+  entitlements: { iep: boolean; goals: boolean; progress: boolean; reports: boolean; support_team: boolean }
+}
+
+// ponytail: per-server-instance memory cache (5 min, the contract's TTL).
+// Instances don't share it; move to a shared store if ANDA load matters.
+const CACHE_MS = 5 * 60 * 1000
+const entitlementsCache = new Map<string, { at: number; value: AndaEntitlements | null }>()
+
+/** GET {ANDA}/api/federation/entitlements. null when ANDA says not linked (404) or on any failure. */
+export async function fetchAndaEntitlements(caller: Caller): Promise<AndaEntitlements | null> {
+  const key = `${caller.localUserId}:${caller.remoteUserId}`
+  const hit = entitlementsCache.get(key)
+  if (hit && Date.now() - hit.at < CACHE_MS) return hit.value
+
+  let value: AndaEntitlements | null = null
+  try {
+    const res = await callAnda(caller, "entitlements", "/api/federation/entitlements")
+    if (res.ok) {
+      const body = await res.json()
+      if (body?.product === "anda" && typeof body.plan === "string" && body.entitlements) value = body
+    } else if (res.status !== 404) {
+      return null // transient error: don't cache
+    }
+  } catch {
+    return null
+  }
+  entitlementsCache.set(key, { at: Date.now(), value })
+  return value
+}
