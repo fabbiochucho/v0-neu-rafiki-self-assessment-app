@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createServiceRoleClient, getAssessmentEncryptionKey } from "@/lib/supabase/service"
 import { AssessmentQuestions } from "@/components/assessment/assessment-questions"
 import { loadAssessmentQuestions } from "@/lib/assessment/questions"
+import { isCompanionConfigured } from "@/lib/entitlements"
 
 interface AssessmentQuestionsPageProps {
   params: Promise<{ id: string }>
@@ -80,6 +81,7 @@ export default async function AssessmentQuestionsPage({ params }: AssessmentQues
       assessment={assessment}
       questions={questions || []}
       existingResponses={existingResponses || []}
+      companionEnabled={isCompanionConfigured()}
     />
   )
 }

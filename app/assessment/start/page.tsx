@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Heart, ArrowLeft, CheckCircle } from "lucide-react"
 import { AssessmentStartForm } from "@/components/assessment/assessment-start-form"
+import { Companion } from "@/components/companion/companion"
+import { isCompanionConfigured } from "@/lib/entitlements"
 
 export default async function AssessmentStartPage() {
   const supabase = await createClient()
@@ -97,6 +99,7 @@ export default async function AssessmentStartPage() {
 
             {/* Information Sidebar */}
             <div className="space-y-6">
+              {isCompanionConfigured() && <Companion mode="before" />}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Assessment Domains</CardTitle>

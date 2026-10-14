@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, ArrowRight, CheckCircle, PauseCircle } from "lucide-react"
 import Link from "next/link"
+import { Companion } from "@/components/companion/companion"
 import {
   buildSections,
   estimateMinutes,
@@ -49,13 +50,19 @@ interface AssessmentQuestionsProps {
   assessment: Assessment
   questions: Question[]
   existingResponses: AssessmentResponse[]
+  companionEnabled?: boolean
 }
 
 type TextSize = "base" | "lg" | "xl"
 const TEXT_SIZE_CLASS: Record<TextSize, string> = { base: "text-base", lg: "text-lg", xl: "text-xl" }
 const PREFS_KEY = "neurafiki-assessment-display"
 
-export function AssessmentQuestions({ assessment, questions, existingResponses }: AssessmentQuestionsProps) {
+export function AssessmentQuestions({
+  assessment,
+  questions,
+  existingResponses,
+  companionEnabled = false,
+}: AssessmentQuestionsProps) {
   const initialResponses = useMemo(
     () => Object.fromEntries(existingResponses.map((r) => [r.question_id, r.response_value])) as Record<string, string>,
     [existingResponses],
@@ -393,6 +400,13 @@ export function AssessmentQuestions({ assessment, questions, existingResponses }
                 )}
               </Button>
             </div>
+
+            {companionEnabled && (
+              <div className="mt-8">
+                {/* Only the question id goes to the server, never the chosen answer. */}
+                <Companion mode="during" questionId={currentQuestion.id} onReturn={() => focusRef.current?.focus()} />
+              </div>
+            )}
           </>
         )}
 

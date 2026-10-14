@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress"
 import Link from "next/link"
 import { Heart, ArrowLeft, Download, Calendar, TrendingUp, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react"
 import { ResultsCharts } from "@/components/assessment/results-charts"
+import { Companion } from "@/components/companion/companion"
+import { isCompanionConfigured } from "@/lib/entitlements"
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Bar, PieChart, Pie, Cell } from "recharts"
 
 interface AssessmentResultsPageProps {
@@ -200,7 +202,13 @@ export default async function AssessmentResultsPage({ params }: AssessmentResult
 
         {/* Results by Domain */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold">Domain Results</h2>
+          <div>
+            <h2 className="text-2xl font-bold">Screening results</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Scored by NeuRafiki from the answers given. These scores are the record. Explanations from the companion,
+              your own observations and any professional&apos;s opinion are separate and never change them.
+            </p>
+          </div>
 
           {results.map((result: any) => (
             <Card key={result.id} className="overflow-hidden">
@@ -234,6 +242,17 @@ export default async function AssessmentResultsPage({ params }: AssessmentResult
             </Card>
           ))}
         </div>
+
+        {isCompanionConfigured() && assessment.status === "completed" && (
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold mb-1">AI explanation</h2>
+            <p className="text-sm text-muted-foreground mb-3">
+              Separate from your screening results. Ask what the results mean, about strengths, areas to explore, or
+              questions to bring to a professional or educator.
+            </p>
+            <Companion mode="after" assessmentId={id} />
+          </div>
+        )}
 
         {/* Charts Section */}
         <ResultsCharts chartData={chartData} riskPieData={riskPieData} />
