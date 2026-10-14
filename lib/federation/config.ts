@@ -1,17 +1,19 @@
 // Cross-app federation configuration.
 //
-// Federation lets a user optionally link their Neu Rafiki account to a
-// sibling "Alliance" app account so completed assessment results can be
-// exported (pulled by Alliance, with per-profile consent). Everything here
-// is opt-in: if NEXT_PUBLIC_ALLIANCE_APP_URL is unset, federation is fully
-// disabled and the app behaves exactly as it does without this feature.
+// Federation lets a user optionally link their Neu Rafiki account to the
+// sibling ANDA app (called "Alliance" in older code and in the federation
+// JWT issuer/remote_app values, which stay "alliance" for compatibility).
+// Everything here is opt-in: if neither NEXT_PUBLIC_ANDA_APP_URL nor the
+// older NEXT_PUBLIC_ALLIANCE_APP_URL is set, federation is fully disabled.
 
-export function isFederationEnabled(): boolean {
-  return Boolean(process.env.NEXT_PUBLIC_ALLIANCE_APP_URL)
+/** ANDA's base URL (no trailing slash), or null when federation is off. */
+export function getSiblingAppUrl(): string | null {
+  const url = process.env.NEXT_PUBLIC_ANDA_APP_URL || process.env.NEXT_PUBLIC_ALLIANCE_APP_URL
+  return url ? url.replace(/\/+$/, "") : null
 }
 
-export function getSiblingAppUrl(): string | null {
-  return process.env.NEXT_PUBLIC_ALLIANCE_APP_URL || null
+export function isFederationEnabled(): boolean {
+  return Boolean(getSiblingAppUrl())
 }
 
 export const THIS_APP_ID = "neurafiki" as const

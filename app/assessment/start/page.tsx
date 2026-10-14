@@ -6,13 +6,16 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Heart, ArrowLeft, CheckCircle } from "lucide-react"
 import { AssessmentStartForm } from "@/components/assessment/assessment-start-form"
+import { Companion } from "@/components/companion/companion"
+import { isCompanionConfigured } from "@/lib/entitlements"
 
-export default async function AssessmentStartPage() {
+export default async function AssessmentStartPage({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
+  const { from } = await searchParams
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.getUser()
   if (error || !data?.user) {
-    redirect("/auth/login")
+    redirect(`/auth/login?redirect=${encodeURIComponent(from === "anda" ? "/assessment/start?from=anda" : "/assessment/start")}`)
   }
 
   // Get user profiles
@@ -24,6 +27,20 @@ export default async function AssessmentStartPage() {
 
   // Get assessment domains
   const { data: domains } = await supabase.from("assessment_domains").select("*").order("name")
+
+  // Which (age group, informant, area, follow-up) combinations actually have
+  // questions, so the form only offers choices that lead somewhere.
+  // ponytail: pulls 4 short columns for the whole bank (~1k rows); switch to a
+  // grouped view/RPC if the bank grows past PostgREST's max-rows limit.
+  const { data: bankRows } = await supabase
+    .from("questions")
+    .select("age_group, respondent_type, domain_id, is_follow_up")
+    .limit(10000)
+  const questionCounts: Record<string, number> = {}
+  for (const r of bankRows || []) {
+    const key = `${r.age_group}|${r.respondent_type}|${r.domain_id}|${r.is_follow_up === true}`
+    questionCounts[key] = (questionCounts[key] || 0) + 1
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -51,8 +68,17 @@ export default async function AssessmentStartPage() {
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Start New Assessment</h1>
-          <p className="text-muted-foreground">Choose who you&apos;re assessing and which domains to evaluate.</p>
+          <h1 className="text-3xl font-bold mb-2">Start a new screening</h1>
+          <p className="text-muted-foreground">
+            A high-depth screening, taken one area at a time. It offers structured screening and referral support; it
+            does not diagnose any condition.
+          </p>
+          {from === "anda" && (
+            <p role="status" className="mt-4 p-3 rounded-lg border bg-primary/5 text-sm">
+              Welcome from ANDA. This screening happens in NeuRafiki, and your answers stay here. Afterwards you can
+              choose whether to share a summary of the results with ANDA.
+            </p>
+          )}
         </div>
 
         {userProfiles && userProfiles.length === 0 ? (
@@ -71,11 +97,16 @@ export default async function AssessmentStartPage() {
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Assessment Form */}
             <div className="lg:col-span-2">
-              <AssessmentStartForm userProfiles={userProfiles || []} domains={domains || []} />
+              <AssessmentStartForm
+                userProfiles={userProfiles || []}
+                domains={domains || []}
+                questionCounts={questionCounts}
+              />
             </div>
 
             {/* Information Sidebar */}
             <div className="space-y-6">
+              {isCompanionConfigured() && <Companion mode="before" />}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Assessment Domains</CardTitle>
@@ -101,7 +132,7 @@ export default async function AssessmentStartPage() {
                   <div>
                     <Badge className="mb-2">Baseline Assessment</Badge>
                     <p className="text-sm text-muted-foreground">
-                      Initial comprehensive screening across selected domains.
+                      A first, in-depth screening across the areas you choose.
                     </p>
                   </div>
                   <div>
@@ -119,8 +150,8 @@ export default async function AssessmentStartPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    All assessment data is encrypted and stored securely. Your responses are anonymized for research
-                    purposes while maintaining your privacy.
+                    Answers are encrypted at rest and visible only to your account. You choose whether anything is
+                    shared with a linked app, and you can change that later.
                   </p>
                 </CardContent>
               </Card>

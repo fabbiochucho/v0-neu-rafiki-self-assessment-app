@@ -46,8 +46,11 @@ export async function updateSession(request: NextRequest) {
     !request.nextUrl.pathname.startsWith("/terms")
   ) {
     // no user, potentially respond by redirecting the user to the login page
+    // Keep where they were headed (incl. deep links like /check-in?from=anda)
+    // so login can send them back; app/auth/login reads ?redirect=.
     const url = request.nextUrl.clone()
     url.pathname = "/auth/login"
+    url.search = `?redirect=${encodeURIComponent(request.nextUrl.pathname + request.nextUrl.search)}`
     return NextResponse.redirect(url)
   }
 

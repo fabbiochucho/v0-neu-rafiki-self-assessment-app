@@ -61,11 +61,25 @@ export interface RequestTokenPayload {
   scope: string // single scope this request needs, e.g. "assessment_sync"
 }
 
-// Neu Rafiki does NOT mint request tokens -- only Alliance does, since
-// Alliance is the one pulling data. Neu Rafiki only ever verifies these, on
-// its assessment-results pull endpoint. If a future phase adds the reverse
-// direction (Neu Rafiki pulling from Alliance), a matching signRequestToken
-// would live here, symmetric to signLinkToken above.
+/**
+ * Signs a request token as THIS app, for calls Neu Rafiki makes to ANDA
+ * (POST check-in-summary, GET entitlements). Same claims and 2-minute expiry
+ * as ANDA's own signRequestToken, with iss "neurafiki"; ANDA verifies it with
+ * Neu Rafiki's public key.
+ */
+export async function signRequestToken(payload: {
+  requesting_user_id: string // Neu Rafiki user id
+  target_remote_user_id: string // ANDA user id from linked_accounts.remote_user_id
+  scope: string
+}): Promise<string> {
+  const key = await getOwnPrivateKey()
+  return new SignJWT({ ...payload })
+    .setProtectedHeader({ alg: "EdDSA" })
+    .setIssuer("neurafiki")
+    .setIssuedAt()
+    .setExpirationTime("2m")
+    .sign(key)
+}
 
 /** Verifies a request token that Alliance issued, using Alliance's public key. */
 export async function verifyAllianceRequestToken(token: string): Promise<RequestTokenPayload> {

@@ -8,6 +8,9 @@ import { Progress } from "@/components/ui/progress"
 import Link from "next/link"
 import { Heart, ArrowLeft, Download, Calendar, TrendingUp, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react"
 import { ResultsCharts } from "@/components/assessment/results-charts"
+import { Companion } from "@/components/companion/companion"
+import { isCompanionConfigured } from "@/lib/entitlements"
+import { getSiblingAppUrl } from "@/lib/federation/config"
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Bar, PieChart, Pie, Cell } from "recharts"
 
 interface AssessmentResultsPageProps {
@@ -49,6 +52,7 @@ export default async function AssessmentResultsPage({ params }: AssessmentResult
     redirect("/dashboard")
   }
 
+  const andaUrl = getSiblingAppUrl()
   const results = assessment.assessment_results || []
   const completedDate = new Date(assessment.completed_at).toLocaleDateString()
 
@@ -198,9 +202,38 @@ export default async function AssessmentResultsPage({ params }: AssessmentResult
           </div>
         </div>
 
+        {/* Completion + handoff to ANDA (cross-app contract) */}
+        {assessment.status === "completed" && (
+          <Card className="mb-8 border-primary/30 bg-primary/5">
+            <CardHeader>
+              <CardTitle>Your assessment is complete.</CardTitle>
+              <CardDescription className="text-base text-foreground">
+                Now let&apos;s turn what you&apos;ve learned into a practical support plan.
+              </CardDescription>
+            </CardHeader>
+            {andaUrl && (
+              <CardContent className="space-y-3">
+                <a href={`${andaUrl}/welcome/from-neurafiki?assessment=${encodeURIComponent(id)}`}>
+                  <Button>Continue to ANDA</Button>
+                </a>
+                <p className="text-sm text-muted-foreground">
+                  ANDA, our sister service, helps you build a support plan. Continuing doesn&apos;t require an ANDA
+                  subscription, and nothing from this screening is shared until you choose to share it.
+                </p>
+              </CardContent>
+            )}
+          </Card>
+        )}
+
         {/* Results by Domain */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold">Domain Results</h2>
+          <div>
+            <h2 className="text-2xl font-bold">Screening results</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Scored by NeuRafiki from the answers given. These scores are the record. Explanations from the companion,
+              your own observations and any professional&apos;s opinion are separate and never change them.
+            </p>
+          </div>
 
           {results.map((result: any) => (
             <Card key={result.id} className="overflow-hidden">
@@ -234,6 +267,17 @@ export default async function AssessmentResultsPage({ params }: AssessmentResult
             </Card>
           ))}
         </div>
+
+        {isCompanionConfigured() && assessment.status === "completed" && (
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold mb-1">AI explanation</h2>
+            <p className="text-sm text-muted-foreground mb-3">
+              Separate from your screening results. Ask what the results mean, about strengths, areas to explore, or
+              questions to bring to a professional or educator.
+            </p>
+            <Companion mode="after" assessmentId={id} />
+          </div>
+        )}
 
         {/* Charts Section */}
         <ResultsCharts chartData={chartData} riskPieData={riskPieData} />

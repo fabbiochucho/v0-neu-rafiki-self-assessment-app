@@ -3,15 +3,10 @@ import { createClient } from "@/lib/supabase/server"
 import { createServiceRoleClient, getAssessmentEncryptionKey } from "@/lib/supabase/service"
 import { getOwnedAssessment, hasValidAssessmentConsent } from "@/lib/assessment/authorize"
 import { computeDomainResults, type QuestionWithDomain } from "@/lib/assessment/scoring"
+import { loadAssessmentQuestions } from "@/lib/assessment/questions"
 
 interface RouteParams {
   params: Promise<{ id: string }>
-}
-
-function getAgeGroup(age: number) {
-  if (age <= 5) return "Toddlers (2-5)"
-  if (age <= 18) return "Children/Adolescents (6-18)"
-  return "Adults (18+)"
 }
 
 /**
@@ -47,16 +42,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
     )
   }
 
-  const profile = assessment.user_profiles as { age: number | null } | null
-  const ageGroup = getAgeGroup(profile?.age || 0)
-
-  const { data: questions, error: questionsError } = await supabase
-    .from("questions")
-    .select("id, question_type, options, score_weight, assessment_domains(name)")
-    .in("assessment_domains.name", assessment.domains)
-    .eq("age_group", ageGroup)
-    .eq("respondent_type", assessment.respondent_type)
-    .eq("is_follow_up", assessment.assessment_type === "follow_up")
+  const { data: questions, error: questionsError } = await loadAssessmentQuestions(supabase, assessment)
 
   if (questionsError) {
     return NextResponse.json({ error: "Failed to load questions" }, { status: 500 })

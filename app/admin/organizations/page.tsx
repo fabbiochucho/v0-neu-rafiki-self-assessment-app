@@ -34,6 +34,7 @@ interface Organization {
 export default function OrganizationsPage() {
   const [isOpen, setIsOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: "",
     domain: "",
@@ -58,46 +59,66 @@ export default function OrganizationsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
     try {
       if (editingId) {
-        const { error } = await supabase
+        // RLS silently skips rows it won't let you change, so check the count.
+        const { data, error } = await supabase
           .from("organizations")
           .update({ name: formData.name, domain: formData.domain || null, max_profiles: formData.max_profiles })
           .eq("id", editingId)
+          .select("id")
         if (error) throw error
+        if (!data || data.length === 0) throw new Error("You don't have permission to edit this organization.")
       } else {
         const {
           data: { user },
         } = await supabase.auth.getUser()
         if (!user) throw new Error("Not signed in")
 
-        const { error } = await supabase.from("organizations").insert([
-          {
+        const { data: created, error } = await supabase
+          .from("organizations")
+          .insert({
             name: formData.name,
             domain: formData.domain || null,
             max_profiles: formData.max_profiles,
             admin_user_id: user.id,
-          },
-        ])
+          })
+          .select("id")
+          .single()
         if (error) throw error
+
+        // The admin panel and /api/admin/organizations authorise via
+        // organization_members.role = 'admin', so the creator needs a
+        // membership row too, not just organizations.admin_user_id.
+        const { error: memberError } = await supabase
+          .from("organization_members")
+          .insert({ organization_id: created.id, user_id: user.id, role: "admin" })
+        if (memberError) throw memberError
       }
       mutate()
       setFormData({ name: "", domain: "", max_profiles: 5 })
       setEditingId(null)
       setIsOpen(false)
-    } catch (error) {
-      console.error("Error saving organization:", error)
+    } catch (err) {
+      console.error("Error saving organization:", err)
+      setError(err instanceof Error ? err.message : "Could not save the organization.")
     }
   }
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this organization?")) {
+      setError(null)
       try {
-        const { error } = await supabase.from("organizations").delete().eq("id", id)
+        // No DELETE policy exists on organizations, so RLS deletes nothing
+        // without erroring. Check the count and say so instead of failing silently.
+        const { data, error } = await supabase.from("organizations").delete().eq("id", id).select("id")
         if (error) throw error
+        if (!data || data.length === 0) throw new Error("Organizations can't be deleted from here yet.")
         mutate()
-      } catch (error) {
-        console.error("Error deleting organization:", error)
+      } catch (err) {
+        console.error("Error deleting organization:", err)
+        setError(err instanceof Error ? err.message : "Could not delete the organization.")
       }
     }
   }
@@ -164,6 +185,12 @@ export default function OrganizationsPage() {
         </Dialog>
       </div>
 
+      {error && (
+        <div role="alert" className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+          {error}
+        </div>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {organizations?.map((org) => (
           <Card key={org.id}>
@@ -185,7 +212,7 @@ export default function OrganizationsPage() {
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 <span>
-                  {org.member_count} / {org.max_profiles} profiles
+                  {org.member_count} {org.member_count === 1 ? "member" : "members"} · up to {org.max_profiles} profiles
                 </span>
               </div>
               <div className="flex items-center gap-2">

@@ -2,6 +2,8 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { createServiceRoleClient, getAssessmentEncryptionKey } from "@/lib/supabase/service"
 import { AssessmentQuestions } from "@/components/assessment/assessment-questions"
+import { loadAssessmentQuestions } from "@/lib/assessment/questions"
+import { isCompanionConfigured } from "@/lib/entitlements"
 
 interface AssessmentQuestionsPageProps {
   params: Promise<{ id: string }>
@@ -13,7 +15,7 @@ export default async function AssessmentQuestionsPage({ params }: AssessmentQues
 
   const { data, error } = await supabase.auth.getUser()
   if (error || !data?.user) {
-    redirect("/auth/login")
+    redirect(`/auth/login?redirect=${encodeURIComponent(`/assessment/${id}/questions`)}`)
   }
 
   // Get assessment details
@@ -41,28 +43,12 @@ export default async function AssessmentQuestionsPage({ params }: AssessmentQues
     redirect("/dashboard")
   }
 
-  // Get questions for selected domains and age group
-  const profileAge = assessment.user_profiles?.age || 0
-  const getAgeGroup = (age: number) => {
-    if (age <= 5) return "Toddlers (2-5)"
-    if (age <= 18) return "Children/Adolescents (6-18)"
-    return "Adults (18+)"
+  // A completed assessment can't take more answers -- send people to their results.
+  if (assessment.status === "completed") {
+    redirect(`/assessment/${id}/results`)
   }
 
-  const ageGroup = getAgeGroup(profileAge)
-
-  const { data: questions } = await supabase
-    .from("questions")
-    .select(`
-      *,
-      assessment_domains(name)
-    `)
-    .in("assessment_domains.name", assessment.domains)
-    .eq("age_group", ageGroup)
-    .eq("respondent_type", assessment.respondent_type)
-    .eq("is_follow_up", assessment.assessment_type === "follow_up")
-    .order("domain_id")
-    .order("question_id")
+  const { data: questions } = await loadAssessmentQuestions(supabase, assessment)
 
   // Get existing responses. response_value is stored encrypted at rest (see
   // scripts/010_encrypt_sensitive_columns.sql), so decryption must happen via
@@ -95,6 +81,7 @@ export default async function AssessmentQuestionsPage({ params }: AssessmentQues
       assessment={assessment}
       questions={questions || []}
       existingResponses={existingResponses || []}
+      companionEnabled={isCompanionConfigured()}
     />
   )
 }

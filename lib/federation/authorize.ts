@@ -26,6 +26,24 @@ export async function hasActiveAllianceLink(
   return !!data && data.length > 0
 }
 
+/** The user's active ANDA link (any scope), or null. Pass a client that can read the row. */
+export async function getActiveAllianceLink(
+  supabase: SupabaseClient,
+  localUserId: string,
+): Promise<{ id: string; remote_user_id: string; scopes: string[] } | null> {
+  const { data, error } = await supabase
+    .from("linked_accounts")
+    .select("id, remote_user_id, scopes")
+    .eq("local_user_id", localUserId)
+    .eq("remote_app", "alliance")
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error || !data) return null
+  return data
+}
+
 /**
  * Returns true if there is a currently-valid (non-revoked) 'federation_sync'
  * consent on file for the given profile. This is a separate, explicit gate
