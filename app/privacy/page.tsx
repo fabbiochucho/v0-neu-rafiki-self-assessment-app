@@ -147,8 +147,10 @@ export default function PrivacyPage() {
               </li>
               <li>Withdraw consent for a profile, the companion or ANDA sharing at any time.</li>
               <li>
-                Ask for a copy of your data, a correction, or deletion of your account and its data by emailing {email}.
+                Delete your account and all its data yourself, at any time, from your{" "}
+                <Link href="/account">account page</Link>.
               </li>
+              <li>Ask for a copy of your data or a correction by emailing {email}.</li>
             </ul>
           ),
         },
@@ -157,9 +159,10 @@ export default function PrivacyPage() {
           heading: "How long we keep it",
           body: (
             <p>
-              We keep your information while your account is open, or until you ask us to delete it. Withdrawing
-              consent stops further use of that data for screening; ask us separately if you also want it deleted.
-              Payment records are kept, anonymised, for as long as the law requires.
+              We keep your information while your account is open. When you delete your account, we delete your
+              profiles, screening answers and results, follow-ups, check-ins, consents and any link to ANDA.
+              Withdrawing consent stops further use of that data for screening; delete your account if you also want
+              it removed. Our payment provider keeps its own payment records for as long as the law requires.
             </p>
           ),
         },
