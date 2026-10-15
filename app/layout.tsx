@@ -43,6 +43,10 @@ export const metadata: Metadata = {
   generator: "v0.app",
 }
 
+// The per-request CSP nonce (middleware.ts) only reaches pages rendered per
+// request, so nothing is prerendered at build time.
+export const dynamic = "force-dynamic"
+
 export default function RootLayout({
   children,
 }: Readonly<{
