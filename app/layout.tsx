@@ -1,13 +1,22 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter, JetBrains_Mono } from "next/font/google"
+import { Fraunces, JetBrains_Mono, Source_Sans_3 } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { DemoBanner } from "@/components/demo/demo-banner"
+import { SiteFooter } from "@/components/site-footer"
 import "./globals.css"
 
-const inter = Inter({
-  variable: "--font-inter",
+// Shared with ANDA so the two products read as one ecosystem (brief §4).
+const sourceSans = Source_Sans_3({
+  variable: "--font-source-sans",
   subsets: ["latin"],
+  display: "swap",
+})
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  display: "swap",
 })
 
 const jetbrainsMono = JetBrains_Mono({
@@ -40,10 +49,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
+    <html lang="en" className={`${sourceSans.variable} ${fraunces.variable} ${jetbrainsMono.variable} antialiased`}>
       <body className="bg-background text-foreground font-sans antialiased">
         <DemoBanner />
         {children}
+        <SiteFooter />
         <Analytics />
       </body>
     </html>

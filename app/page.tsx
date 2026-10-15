@@ -1,242 +1,140 @@
 import Link from "next/link"
+import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Heart, Users, Shield, Globe } from "lucide-react"
-import { getSiblingAppUrl } from "@/lib/federation/config"
+import { KenteStrip } from "@/components/afro/kente-strip"
+import { PillarPreview } from "@/components/home/pillar-preview"
+
+const DOMAINS = [
+  { name: "Autism", description: "Social communication and repetitive behaviours", thread: "var(--thread-indigo)" },
+  { name: "ADHD", description: "Attention, hyperactivity and impulse control", thread: "var(--thread-terracotta)" },
+  { name: "Dyslexia", description: "Reading, writing and language processing", thread: "var(--thread-gold)" },
+  { name: "Dyspraxia", description: "Motor coordination and planning", thread: "var(--thread-teal)" },
+  { name: "Sensory processing", description: "Sensory sensitivity and integration", thread: "var(--thread-green)" },
+  { name: "Executive function", description: "Planning, organisation and flexible thinking", thread: "var(--thread-indigo)" },
+]
+
+const PROMISES = [
+  { title: "Several people, one account", text: "Manage screenings for family members or students from one account." },
+  { title: "Made for African contexts", text: "Questions and recommendations tailored to African cultural contexts and school systems." },
+  { title: "Privacy first", text: "Data is anonymised where possible and stored securely. Your answers stay yours." },
+  { title: "Connected to support", text: "Continue into ANDA to turn what you learn into a plan with goals and a support team." },
+]
 
 export default function HomePage() {
-  const allianceUrl = getSiblingAppUrl()
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-                <Heart className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold text-foreground">NeuRafiki</span>
-            </div>
-            <nav className="flex items-center space-x-4">
-              <Link href="/auth/login">
-                <Button variant="ghost">Sign In</Button>
-              </Link>
-              <Link href="/auth/sign-up">
-                <Button>Get Started</Button>
-              </Link>
-            </nav>
-          </div>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-40 bg-background">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/" className="flex min-w-0 items-center gap-2.5" aria-label="NeuRafiki home">
+            <span aria-hidden="true" className="companion-orb h-8 w-8 shrink-0 rounded-full" data-state="ready" />
+            <span className="hidden min-[400px]:inline font-display text-2xl font-semibold">NeuRafiki</span>
+          </Link>
+          <nav aria-label="Account" className="flex items-center gap-2">
+            <Button variant="ghost" asChild>
+              <Link href="/auth/login">Sign in</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/auth/sign-up">Get started</Link>
+            </Button>
+          </nav>
         </div>
+        <KenteStrip height={6} />
       </header>
 
-      {/* Hero Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto text-center max-w-4xl">
-          <Badge variant="secondary" className="mb-4">
-            Culturally Adapted for African Communities
-          </Badge>
-          <h1 className="text-4xl md:text-6xl font-bold text-balance mb-6">
-            Assess. Understand. <span className="text-primary">Accompany.</span>
-          </h1>
-          <p className="text-xl text-muted-foreground text-pretty mb-8 max-w-2xl mx-auto">
-            A structured neurodevelopmental assessment platform with an intelligent companion that helps you understand
-            your results and navigate your next steps.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth/sign-up">
-              <Button size="lg" className="w-full sm:w-auto">
-                Start Free Assessment
-              </Button>
-            </Link>
-            <Link href="/about">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto bg-transparent">
-                Learn More
-              </Button>
-            </Link>
+      <main>
+        {/* Hero: the promise, beside a working example of each pillar (brief §46) */}
+        <section aria-labelledby="hero-heading" className="relative overflow-hidden">
+          <div aria-hidden="true" className="afro-texture absolute inset-y-0 right-0 hidden lg:block lg:w-[50%]" />
+          <div className="container relative mx-auto px-4 py-12 lg:py-16 grid gap-10 lg:grid-cols-[1fr_minmax(0,28rem)] lg:items-center">
+            <div className="max-w-xl min-w-0">
+              <h1 id="hero-heading" className="text-5xl sm:text-6xl xl:text-[4.25rem] font-semibold leading-[1.02] text-balance">
+                Assess. Understand. <span className="text-primary">Accompany.</span>
+              </h1>
+              <p className="mt-6 text-xl text-muted-foreground text-pretty leading-relaxed">
+                A structured neurodevelopmental assessment platform with an intelligent companion that helps you
+                understand your results and navigate your next steps.
+              </p>
+              <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                <Button size="lg" asChild className="h-12 px-7 text-base">
+                  <Link href="/auth/sign-up">
+                    Start free assessment <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild className="h-12 px-7 text-base bg-background">
+                  <Link href="/about">Learn more</Link>
+                </Button>
+              </div>
+              <p className="mt-6 text-sm text-muted-foreground">
+                Screening, not a diagnosis. Culturally adapted for African communities.
+              </p>
+            </div>
+            <PillarPreview />
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Three pillars */}
-      <section aria-labelledby="pillars-heading" className="py-12 px-4">
-        <div className="container mx-auto max-w-5xl">
-          <h2 id="pillars-heading" className="sr-only">
-            How NeuRafiki works
-          </h2>
-          <div className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                title: "Assess",
-                text: "A high-depth screening across autism, ADHD, learning, motor, sensory and executive-function areas, one area at a time, answered by the person or by a parent, caregiver, teacher or professional. It is screening, not a diagnosis.",
-              },
-              {
-                title: "Understand",
-                text: "Clear, area-by-area results, with a companion that explains what they mean in plain language and keeps its explanations separate from your scores.",
-              },
-              {
-                title: "Accompany",
-                text: "Practical next steps, questions to bring to professionals and educators, and short check-ins that track how goals are going over time.",
-              },
-            ].map((pillar) => (
-              <Card key={pillar.title}>
-                <CardHeader>
-                  <CardTitle className="text-2xl">{pillar.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-base">{pillar.text}</CardDescription>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+        <KenteStrip height={8} />
 
-      {/* Features Section */}
-      <section className="py-16 px-4">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Why Choose NeuRafiki?</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Structured screening with cultural sensitivity and privacy built in.
+        {/* Areas: woven chips, each with its own thread */}
+        <section aria-labelledby="areas-heading" className="py-20">
+          <div className="container mx-auto px-4">
+            <h2 id="areas-heading" className="text-4xl lg:text-5xl font-semibold text-balance max-w-2xl">
+              Areas a screening can explore
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground max-w-2xl text-pretty">
+              Age-appropriate questions for ages 2 to adult, answered by the person or by a parent, caregiver, teacher or
+              professional.
             </p>
+            <ul className="mt-10 grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
+              {DOMAINS.map((d) => (
+                <li key={d.name} className="flex gap-4 border-t py-5">
+                  <span aria-hidden="true" className="mt-1.5 h-10 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: d.thread }} />
+                  <span>
+                    <span className="block font-display text-xl font-semibold">{d.name}</span>
+                    <span className="mt-1 block text-muted-foreground">{d.description}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
+        </section>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader>
-                <Users className="h-8 w-8 text-primary mb-2" />
-                <CardTitle className="text-lg">Multi-Profile Support</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Manage assessments for multiple family members or students from one account.
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <Globe className="h-8 w-8 text-accent mb-2" />
-                <CardTitle className="text-lg">Culturally Adapted</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Questions and recommendations tailored to African cultural contexts and educational systems.
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <Shield className="h-8 w-8 text-primary mb-2" />
-                <CardTitle className="text-lg">Privacy First</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Built with privacy in mind: data is anonymized where possible and stored securely.
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <Heart className="h-8 w-8 text-accent mb-2" />
-                <CardTitle className="text-lg">Support Integration</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Connect directly with local support services, therapists, and educational resources.
-                </CardDescription>
-              </CardContent>
-            </Card>
+        {/* Why NeuRafiki: one committed deep-indigo band */}
+        <section aria-labelledby="why-heading" className="relative overflow-hidden bg-loom text-loom-foreground">
+          <div aria-hidden="true" className="afro-texture absolute inset-0" style={{ ["--texture" as string]: "rgb(243 239 230 / 0.08)" }} />
+          <div className="container relative mx-auto px-4 py-20">
+            <h2 id="why-heading" className="text-4xl lg:text-5xl font-semibold text-balance max-w-3xl">
+              Structured screening, with care built in
+            </h2>
+            <ul className="mt-12 grid gap-10 md:grid-cols-2 lg:grid-cols-4">
+              {PROMISES.map((p, i) => (
+                <li key={p.title} className="border-t-2 pt-5" style={{ borderColor: ["var(--thread-gold)", "var(--thread-teal)", "var(--thread-terracotta)", "var(--thread-green)"][i] }}>
+                  <h3 className="text-xl font-semibold">{p.title}</h3>
+                  <p className="mt-2 text-loom-muted text-pretty">{p.text}</p>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Assessment Domains */}
-      <section className="py-16 px-4 bg-muted/50">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Comprehensive Assessment Domains</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Screen across multiple neurodivergent conditions with age-appropriate questionnaires.
-            </p>
+        {/* Close */}
+        <section aria-labelledby="begin-heading" className="py-20">
+          <div className="container mx-auto px-4 grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div className="max-w-2xl">
+              <h2 id="begin-heading" className="text-4xl lg:text-5xl font-semibold text-balance">
+                Ready to begin your journey?
+              </h2>
+              <p className="mt-4 text-xl text-muted-foreground text-pretty">
+                Start with a free screening. You can pause at any time and pick up where you left off.
+              </p>
+            </div>
+            <Button size="lg" asChild className="h-12 px-7 text-base">
+              <Link href="/auth/sign-up">Start your free assessment</Link>
+            </Button>
           </div>
+        </section>
+      </main>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { name: "Autism Spectrum", description: "Social communication and repetitive behaviors" },
-              { name: "ADHD", description: "Attention, hyperactivity, and impulse control" },
-              { name: "Dyslexia", description: "Reading, writing, and language processing" },
-              { name: "Dyspraxia", description: "Motor coordination and planning" },
-              { name: "Sensory Processing", description: "Sensory sensitivity and integration" },
-              { name: "Executive Function", description: "Planning, organization, and cognitive flexibility" },
-            ].map((domain) => (
-              <Card key={domain.name} className="text-center">
-                <CardHeader>
-                  <CardTitle className="text-lg">{domain.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>{domain.description}</CardDescription>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Begin Your Journey?</h2>
-          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Start with a free screening. You can pause at any time and pick up where you left off.
-          </p>
-          <Link href="/auth/sign-up">
-            <Button size="lg">Start Your Free Assessment</Button>
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t py-8 px-4">
-        <div className="container mx-auto text-center text-muted-foreground space-y-2">
-          <p>
-            &copy; {new Date().getFullYear()} NeuRafiki. Part of the{" "}
-            {allianceUrl ? (
-              <a href={allianceUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                African Neurodiversity Alliance
-              </a>
-            ) : (
-              "African Neurodiversity Alliance"
-            )}{" "}
-            ecosystem.
-          </p>
-          <p className="flex flex-wrap items-center justify-center gap-4 text-sm">
-            <Link href="/about" className="hover:underline">
-              About
-            </Link>
-            <Link href="/faq" className="hover:underline">
-              FAQ
-            </Link>
-            <Link href="/blog" className="hover:underline">
-              Blog
-            </Link>
-            <Link href="/contact" className="hover:underline">
-              Contact
-            </Link>
-            <Link href="/privacy" className="hover:underline">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="hover:underline">
-              Terms of Service
-            </Link>
-          </p>
-        </div>
-      </footer>
     </div>
   )
 }

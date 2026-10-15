@@ -24,6 +24,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Heart } from "lucide-react"
+import { Turnstile, TURNSTILE_SITE_KEY } from "@/components/turnstile"
 
 const CONSENT_VERSION = "1.0"
 
@@ -36,6 +37,8 @@ export default function SignUpPage() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaKey, setCaptchaKey] = useState(0)
   const router = useRouter();
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -62,8 +65,8 @@ export default function SignUpPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (password.length < 12 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setError("Password must be at least 12 characters, with an uppercase letter, a lowercase letter and a number");
       setIsLoading(false);
       return;
     }
@@ -92,6 +95,7 @@ export default function SignUpPage() {
         email,
         password,
         options: {
+          captchaToken: captchaToken ?? undefined,
           emailRedirectTo:
             process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
             `${window.location.origin}/auth/sign-up-success`,
@@ -102,7 +106,11 @@ export default function SignUpPage() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        setCaptchaToken(null)
+        setCaptchaKey((k) => k + 1)
+        throw error
+      }
 
       // Record account-level consent. This project has email confirmation
       // enabled (see app/auth/sign-up-success/page.tsx), so signUp() does not
@@ -211,7 +219,7 @@ export default function SignUpPage() {
                     <Input
                       id="password"
                       type="password"
-                      placeholder="At least 6 characters"
+                      placeholder="12+ characters, upper & lower case, a number"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -236,7 +244,7 @@ export default function SignUpPage() {
                       onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
                       required
                     />
-                    <Label htmlFor="agreeToTerms" className="text-sm font-normal leading-snug">
+                    <Label htmlFor="agreeToTerms" className="block min-w-0 text-sm font-normal leading-snug">
                       I agree to the{" "}
                       <Link href="/privacy" target="_blank" className="text-primary hover:underline">
                         Privacy Policy
@@ -255,7 +263,8 @@ export default function SignUpPage() {
                     </div>
                   )}
 
-                  <Button type="submit" className="w-full mt-2" disabled={isLoading || !agreedToTerms}>
+                  <Turnstile key={captchaKey} onToken={setCaptchaToken} />
+                  <Button type="submit" className="w-full mt-2" disabled={isLoading || !agreedToTerms || (!!TURNSTILE_SITE_KEY && !captchaToken)}>
                     {isLoading ? "Creating account..." : "Sign Up"}
                   </Button>
                 </div>

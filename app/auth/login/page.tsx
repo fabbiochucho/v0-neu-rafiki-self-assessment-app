@@ -10,6 +10,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense, useState } from "react"
 import { Heart } from "lucide-react"
+import { Turnstile, TURNSTILE_SITE_KEY } from "@/components/turnstile"
 
 export default function LoginPage() {
   return (
@@ -23,6 +24,8 @@ function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaKey, setCaptchaKey] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -46,9 +49,12 @@ function LoginForm() {
       const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: { captchaToken: captchaToken ?? undefined },
       })
 
       if (error) {
+        setCaptchaToken(null)
+        setCaptchaKey((k) => k + 1)
         throw new Error(error.message || "Authentication failed")
       }
 
@@ -144,7 +150,8 @@ function LoginForm() {
                       {error}
                     </div>
                   )}
-                  <Button type="submit" className="w-full mt-2" disabled={isLoading}>
+                  <Turnstile key={captchaKey} onToken={setCaptchaToken} />
+                  <Button type="submit" className="w-full mt-2" disabled={isLoading || (!!TURNSTILE_SITE_KEY && !captchaToken)}>
                     {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
                 </div>
