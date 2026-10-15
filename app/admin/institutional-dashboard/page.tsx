@@ -71,7 +71,7 @@ export default async function InstitutionalDashboardPage() {
               <p className="text-muted-foreground capitalize">{organization?.type} • {organization?.country}</p>
             </div>
             <div className="flex gap-2">
-              <Link href={`/admin/organizations/${orgMember.organization_id}/settings`}>
+              <Link href="/account">
                 <Button variant="outline" size="sm">
                   <Settings className="h-4 w-4 mr-2" />
                   Settings
@@ -200,7 +200,7 @@ export default async function InstitutionalDashboardPage() {
                     <CardTitle>Team Members</CardTitle>
                     <CardDescription>Manage your institutional team</CardDescription>
                   </div>
-                  <Link href={`/admin/organizations/${orgMember.organization_id}/members/invite`}>
+                  <Link href={`/admin/organizations/${orgMember.organization_id}/members#invite`}>
                     <Button size="sm">
                       <UserPlus className="h-4 w-4 mr-2" />
                       Invite Member

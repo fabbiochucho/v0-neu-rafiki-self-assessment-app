@@ -52,3 +52,35 @@ export async function closeDueOrganizations(service: SupabaseClient, now = new D
   }
   return closed
 }
+
+export const MEMBER_ROLES = ["admin", "teacher", "hr_staff", "member"] as const
+export type MemberRole = (typeof MEMBER_ROLES)[number]
+
+/**
+ * Adds (or updates) one member. An existing account is found through
+ * profiles (profiles.id mirrors auth.users.id); anyone new is invited by
+ * email through the Auth Admin API. Shared by single invites and bulk CSV.
+ */
+export async function enrollMember(
+  service: SupabaseClient,
+  orgId: string,
+  input: { email: string; name?: string; role: MemberRole },
+): Promise<{ userId: string; invited: boolean }> {
+  const email = input.email.trim().toLowerCase()
+  const { data: existing } = await service.from("profiles").select("id").eq("email", email).maybeSingle()
+  let userId = existing?.id as string | undefined
+  let invited = false
+  if (!userId) {
+    const { data, error } = await service.auth.admin.inviteUserByEmail(email, {
+      data: input.name ? { full_name: input.name } : undefined,
+    })
+    if (error) throw error
+    userId = data.user.id
+    invited = true
+  }
+  const { error } = await service
+    .from("organization_members")
+    .upsert({ organization_id: orgId, user_id: userId, role: input.role }, { onConflict: "organization_id,user_id" })
+  if (error) throw error
+  return { userId, invited }
+}
