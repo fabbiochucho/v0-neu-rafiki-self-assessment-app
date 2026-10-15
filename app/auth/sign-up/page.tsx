@@ -65,8 +65,8 @@ export default function SignUpPage() {
       return;
     }
 
-    if (password.length < 12 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-      setError("Password must be at least 12 characters, with an uppercase letter, a lowercase letter and a number");
+    if (password.length < 12 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*()_+\-=[\]{};'\:"|<>?,./`~]/.test(password)) {
+      setError("Password must be at least 12 characters, with an uppercase letter, a lowercase letter, a number and a symbol");
       setIsLoading(false);
       return;
     }
@@ -219,7 +219,7 @@ export default function SignUpPage() {
                     <Input
                       id="password"
                       type="password"
-                      placeholder="12+ characters, upper & lower case, a number"
+                      placeholder="12+ characters: Aa, 1 and a symbol"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
