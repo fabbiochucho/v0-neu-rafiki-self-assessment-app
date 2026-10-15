@@ -1,151 +1,184 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { useParams } from "next/navigation"
-import { createBrowserClient } from "@supabase/ssr"
 import useSWR from "swr"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, Trash2, Mail } from "lucide-react"
-
-const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+import { ROLE_LABELS, type UserRole } from "@/lib/auth/roles"
 
 interface Member {
   id: string
-  email: string
-  role: string
-  status: string
-  joined_at: string
+  user_id: string
+  role: UserRole
+  created_at: string
+  email: string | null
+  primary: boolean
+  you: boolean
+}
+
+const ROLES = Object.keys(ROLE_LABELS) as UserRole[]
+
+async function api(url: string, init?: RequestInit) {
+  const res = await fetch(url, { headers: { "Content-Type": "application/json" }, ...init }).catch(() => null)
+  const data = await res?.json().catch(() => ({}))
+  if (!res?.ok) throw new Error((data?.error as string) || "That didn't work. Please try again.")
+  return data
 }
 
 export default function OrganizationMembersPage() {
-  const params = useParams()
-  const orgId = params.id as string
-  const [isOpen, setIsOpen] = useState(false)
-  const [memberEmail, setMemberEmail] = useState("")
-  const [memberRole, setMemberRole] = useState("educator")
+  const orgId = useParams().id as string
+  const url = `/api/admin/organizations/${orgId}/members`
+  const { data, error: loadError, mutate } = useSWR<{ members: Member[] }>(url, (u: string) => api(u))
+  const [email, setEmail] = useState("")
+  const [name, setName] = useState("")
+  const [role, setRole] = useState<UserRole>("member")
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null)
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null)
 
-  const { data: members, mutate } = useSWR<Member[]>(`/api/organizations/${orgId}/members`, async (url: string) => {
-    const { data, error } = await supabase
-      .from("organization_members")
-      .select("*")
-      .eq("organization_id", orgId)
-      .order("joined_at", { ascending: false })
-    if (error) throw error
-    return data
-  })
-
-  const handleAddMember = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const run = async (fn: () => Promise<unknown>, ok?: string) => {
+    setBusy(true)
+    setMessage(null)
     try {
-      const { error } = await supabase.from("organization_members").insert([
-        {
-          organization_id: orgId,
-          email: memberEmail,
-          role: memberRole,
-          status: "pending",
-        },
-      ])
-      if (error) throw error
-      mutate()
-      setMemberEmail("")
-      setMemberRole("educator")
-      setIsOpen(false)
-    } catch (error) {
-      console.error("Error adding member:", error)
-    }
-  }
-
-  const handleRemoveMember = async (id: string) => {
-    if (confirm("Remove this member from the organization?")) {
-      try {
-        const { error } = await supabase.from("organization_members").delete().eq("id", id)
-        if (error) throw error
-        mutate()
-      } catch (error) {
-        console.error("Error removing member:", error)
-      }
+      await fn()
+      await mutate()
+      if (ok) setMessage({ kind: "ok", text: ok })
+    } catch (e) {
+      setMessage({ kind: "error", text: (e as Error).message })
+    } finally {
+      setBusy(false)
+      setConfirmRemove(null)
     }
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Organization Members</h1>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Member
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Invite Member</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleAddMember} className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={memberEmail}
-                  onChange={(e) => setMemberEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="role">Role</Label>
-                <Select value={memberRole} onValueChange={setMemberRole}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="educator">Educator</SelectItem>
-                    <SelectItem value="administrator">Administrator</SelectItem>
-                    <SelectItem value="supervisor">Supervisor</SelectItem>
-                    <SelectItem value="analyst">Data Analyst</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit" className="w-full">
-                Send Invitation
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+      <div>
+        <h1 className="text-3xl font-bold">Members</h1>
+        <p className="text-muted-foreground">
+          Invite people, change their role, or remove them. To hand the organisation to someone else, use your account page.
+        </p>
       </div>
 
+      <Card id="invite">
+        <CardHeader>
+          <CardTitle>Invite a member</CardTitle>
+          <CardDescription>
+            People who already have a NeuRafiki account are added straight away. Anyone new gets an email invitation.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            className="grid gap-4 sm:grid-cols-[1fr_1fr_12rem_auto] sm:items-end"
+            onSubmit={(e) => {
+              e.preventDefault()
+              run(
+                () => api(url, { method: "POST", body: JSON.stringify({ email, name, role }) }),
+                `${email} has been added.`,
+              ).then(() => {
+                setEmail("")
+                setName("")
+                setRole("member")
+              })
+            }}
+          >
+            <div className="space-y-1">
+              <Label htmlFor="member-email">Email</Label>
+              <Input id="member-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="member-name">Name (optional)</Label>
+              <Input id="member-name" maxLength={100} value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="member-role">Role</Label>
+              <select
+                id="member-role"
+                value={role}
+                onChange={(e) => setRole(e.target.value as UserRole)}
+                className="w-full h-9 px-3 border rounded-md bg-background"
+              >
+                {ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {ROLE_LABELS[r]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Button type="submit" disabled={busy || !email}>
+              {busy ? "Adding..." : "Invite"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {message && (
+        <p role={message.kind === "error" ? "alert" : "status"} className={message.kind === "error" ? "text-sm text-destructive" : "text-sm"}>
+          {message.text}
+        </p>
+      )}
+
       <div className="space-y-2">
-        {members?.map((member) => (
-          <Card key={member.id}>
-            <CardContent className="flex items-center justify-between py-4">
-              <div className="flex items-center gap-3">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="font-medium">{member.email}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {member.role.charAt(0).toUpperCase() + member.role.slice(1)} • {member.status}
-                  </p>
+        {loadError && <p className="text-sm text-destructive">{(loadError as Error).message}</p>}
+        {!data && !loadError && <p className="text-sm text-muted-foreground">Loading members...</p>}
+        {data?.members.map((m) => (
+          <Card key={m.id}>
+            <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="font-medium break-all">{m.email ?? "Member without an email"}</p>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  {m.primary && <Badge>Primary admin</Badge>}
+                  {m.you && <Badge variant="secondary">You</Badge>}
                 </div>
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleRemoveMember(member.id)}
-                aria-label={`Remove ${member.email}`}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="sr-only" htmlFor={`role-${m.id}`}>
+                  Role for {m.email ?? "member"}
+                </label>
+                <select
+                  id={`role-${m.id}`}
+                  value={m.role}
+                  disabled={busy || m.primary}
+                  onChange={(e) =>
+                    run(() => api(url, { method: "PATCH", body: JSON.stringify({ memberId: m.id, role: e.target.value }) }), "Role updated.")
+                  }
+                  className="h-9 px-3 border rounded-md bg-background"
+                >
+                  {ROLES.map((r) => (
+                    <option key={r} value={r}>
+                      {ROLE_LABELS[r]}
+                    </option>
+                  ))}
+                </select>
+                {!m.primary &&
+                  (confirmRemove === m.id ? (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={busy}
+                        onClick={() => run(() => api(`${url}?memberId=${m.id}`, { method: "DELETE" }), "Member removed.")}
+                      >
+                        Confirm remove
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setConfirmRemove(null)}>
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button size="sm" variant="outline" disabled={busy} onClick={() => setConfirmRemove(m.id)}>
+                      Remove
+                    </Button>
+                  ))}
+              </div>
             </CardContent>
           </Card>
         ))}
+        {data && data.members.length === 0 && <p className="text-sm text-muted-foreground">No members yet.</p>}
       </div>
     </div>
   )

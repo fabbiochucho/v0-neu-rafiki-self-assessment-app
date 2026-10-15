@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createServiceRoleClient } from "@/lib/supabase/service"
 import { ADMIN_PANEL_ROLES, type UserRole } from "@/lib/auth/roles"
+import { enrollMember } from "@/lib/organizations"
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -110,28 +111,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     try {
-      // profiles.id mirrors auth.users.id 1:1 via the handle_new_user
-      // trigger, so a profiles lookup by email tells us whether this person
-      // already has an account without needing the admin-only
-      // auth.admin.listUsers API.
-      const { data: existingProfile } = await service.from("profiles").select("id").eq("email", email).maybeSingle()
-
-      let userId = existingProfile?.id as string | undefined
-
-      if (!userId) {
-        const { data: invited, error: inviteError } = await service.auth.admin.inviteUserByEmail(email, {
-          data: { full_name: name },
-        })
-        if (inviteError) throw inviteError
-        userId = invited.user.id
-      }
-
-      const { error: memberError } = await service
-        .from("organization_members")
-        .upsert({ organization_id: organizationId, user_id: userId, role }, { onConflict: "organization_id,user_id" })
-
-      if (memberError) throw memberError
-
+      await enrollMember(service, organizationId, { email, name, role })
       results.push({ email, success: true })
     } catch (err) {
       results.push({ email, success: false, error: err instanceof Error ? err.message : "Unknown error" })
