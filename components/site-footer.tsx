@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { KenteStrip } from "@/components/afro/kente-strip"
 import { getSiblingAppUrl } from "@/lib/federation/config"
-import { BECOMECHANGE_URL, LEGAL_BRAND, LEGAL_CONTACT_EMAIL, LEGAL_OWNER } from "@/lib/legal"
+import { BECOMECHANGE_URL, COPYRIGHT_HOLDER, LEGAL_BRAND, LEGAL_CONTACT_EMAIL } from "@/lib/legal"
 
 const LINKS = [
   ["/about", "About"],
@@ -51,7 +51,7 @@ export function SiteFooter() {
           </nav>
         </div>
         <div className="border-t pt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between text-sm">
-          <p>&copy; {new Date().getFullYear()} {LEGAL_OWNER}. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} {COPYRIGHT_HOLDER}. All rights reserved.</p>
           <nav aria-label="Legal" className="flex flex-wrap gap-x-5 gap-y-2">
             {LEGAL.map(([href, label]) => (
               <Link key={href} href={href} className="hover:text-foreground hover:underline">
