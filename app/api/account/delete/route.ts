@@ -10,7 +10,7 @@ import { createServiceRoleClient } from "@/lib/supabase/service"
 //
 // Organisation admins are refused: organizations.admin_user_id cascades,
 // so deleting them would delete the whole organisation and its members'
-// links. ponytail: blocked until the owner decides an org-deletion policy.
+// links. Owner decision (Oct 2026): hand over or close it first (lib/organizations.ts).
 export async function POST(request: Request) {
   const supabase = await createClient()
   const {
@@ -31,15 +31,21 @@ export async function POST(request: Request) {
   }
 
   const uid = user.id
-  const { count: adminOf } = await service
-    .from("organizations")
-    .select("id", { count: "exact", head: true })
-    .eq("admin_user_id", uid)
-  if (adminOf) {
+  const { data: adminOf } = await service.from("organizations").select("closing_at").eq("admin_user_id", uid)
+  if (adminOf?.length && adminOf.every((o) => o.closing_at)) {
+    const last = adminOf.map((o) => o.closing_at as string).sort().at(-1)!
+    return NextResponse.json(
+      {
+        error: `Your organisation closes on ${new Date(last).toLocaleDateString("en-GB")}. You can delete your account after that. Nothing was deleted.`,
+      },
+      { status: 409 },
+    )
+  }
+  if (adminOf?.length) {
     return NextResponse.json(
       {
         error:
-          "You're the admin of an organisation, so your account can't be deleted here. Email dpo@becomechange.institute and we'll help transfer or close it. Nothing was deleted.",
+          "You're the primary admin of an organisation. Hand it over to another member, or close it, in the Organisations section of this page first. Nothing was deleted.",
       },
       { status: 409 },
     )

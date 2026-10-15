@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createServiceRoleClient } from "@/lib/supabase/service"
 import { sendEmail } from "@/lib/email/mailer"
 import { isReminderDue } from "@/lib/assessment/followups"
+import { closeDueOrganizations } from "@/lib/organizations"
 
 // Reads no cookies()/headers() from next/headers (createServiceRoleClient()
 // doesn't touch the request at all), so without this Next.js would treat it
@@ -30,6 +31,13 @@ export async function GET(request: NextRequest) {
 
   const supabase = createServiceRoleClient()
   const today = new Date().toISOString().split("T")[0]
+
+  // Also runs the daily organisation-closure sweep (30-day grace period,
+  // lib/organizations.ts), so it needs no cron job of its own.
+  const closedOrganizations = await closeDueOrganizations(supabase).catch((e) => {
+    console.error("[cron/followup-reminders] organisation closure sweep failed:", e)
+    return [] as string[]
+  })
 
   const { data: schedules, error } = await supabase
     .from("assessment_followup_schedules")
@@ -90,5 +98,5 @@ export async function GET(request: NextRequest) {
     results.push({ scheduleId: schedule.id, sent })
   }
 
-  return NextResponse.json({ checked: due.length, sent: results.filter((r) => r.sent).length, results })
+  return NextResponse.json({ checked: due.length, sent: results.filter((r) => r.sent).length, results, closedOrganizations })
 }

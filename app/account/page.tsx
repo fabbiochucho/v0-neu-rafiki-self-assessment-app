@@ -11,6 +11,9 @@ import { getSiblingAppUrl } from "@/lib/federation/config"
 import { getActiveAllianceLink } from "@/lib/federation/authorize"
 import { fetchAndaEntitlements } from "@/lib/federation/anda"
 import { DeleteAccount } from "@/components/account/delete-account"
+import { OrganisationControls } from "@/components/account/organisation-controls"
+import { createServiceRoleClient } from "@/lib/supabase/service"
+import { otherMembers } from "@/lib/organizations"
 
 function EntitlementList({ items }: { items: [string, boolean][] }) {
   return (
@@ -44,6 +47,20 @@ export default async function AccountPage() {
   const andaUrl = getSiblingAppUrl()
   const link = andaUrl ? await getActiveAllianceLink(supabase, user.id) : null
   const anda = link ? await fetchAndaEntitlements({ localUserId: user.id, remoteUserId: link.remote_user_id }) : null
+
+  // Organisations this user is the primary admin of (owner decision: hand
+  // over or close before leaving). Service client: other members' emails
+  // aren't readable through RLS; only orgs this user administers are loaded.
+  let orgs: { id: string; name: string; closing_at: string | null; members: Awaited<ReturnType<typeof otherMembers>> }[] = []
+  try {
+    const service = createServiceRoleClient()
+    const { data } = await service.from("organizations").select("id, name, closing_at").eq("admin_user_id", user.id)
+    orgs = await Promise.all(
+      (data ?? []).map(async (o) => ({ ...o, members: await otherMembers(service, o.id, user.id) })),
+    )
+  } catch {
+    orgs = []
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -123,6 +140,23 @@ export default async function AccountPage() {
                   </Link>
                 )}
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {orgs.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Organisations you run</CardTitle>
+              <CardDescription>
+                Before you can delete your account, hand each organisation over to another member. If you&apos;re the
+                only member, you can close it instead.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {orgs.map((o) => (
+                <OrganisationControls key={o.id} orgId={o.id} orgName={o.name} closingAt={o.closing_at} members={o.members} />
+              ))}
             </CardContent>
           </Card>
         )}

@@ -6,7 +6,8 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 
 export type Plan = "free" | "premium"
 
-/** Companion messages per user per UTC day, by plan. Owner decision; see PR. */
+/** Companion messages per user per UTC day, by plan. Owner decision (Oct 2026): keep these;
+ * review Cloudflare usage after the first month and raise only if the free allowance is unused. */
 export const AI_DAILY_LIMIT: Record<Plan, number> = { free: 10, premium: 100 }
 /** Minimum gap between companion messages from one user (burst protection). */
 export const AI_MIN_INTERVAL_SECONDS = 3
