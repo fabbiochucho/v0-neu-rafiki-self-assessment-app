@@ -62,8 +62,8 @@ export default function SignUpPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (password.length < 12 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setError("Password must be at least 12 characters, with an uppercase letter, a lowercase letter and a number");
       setIsLoading(false);
       return;
     }
@@ -211,7 +211,7 @@ export default function SignUpPage() {
                     <Input
                       id="password"
                       type="password"
-                      placeholder="At least 6 characters"
+                      placeholder="12+ characters, upper & lower case, a number"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -236,7 +236,7 @@ export default function SignUpPage() {
                       onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
                       required
                     />
-                    <Label htmlFor="agreeToTerms" className="text-sm font-normal leading-snug">
+                    <Label htmlFor="agreeToTerms" className="block min-w-0 text-sm font-normal leading-snug">
                       I agree to the{" "}
                       <Link href="/privacy" target="_blank" className="text-primary hover:underline">
                         Privacy Policy

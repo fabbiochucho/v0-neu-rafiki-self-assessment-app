@@ -1,114 +1,178 @@
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Heart } from "lucide-react"
+import { LegalPage } from "@/components/legal-page"
+import { LEGAL_CONTACT_EMAIL, LEGAL_OWNER } from "@/lib/legal"
 
 export const metadata = {
-  title: "Privacy Policy - NeuRafiki",
+  title: "Privacy policy | NeuRafiki",
+  description: "What NeuRafiki collects, why, who processes it, and how to access or delete your data.",
 }
 
-export default function PrivacyPolicyPage() {
+const email = <a href={`mailto:${LEGAL_CONTACT_EMAIL}`}>{LEGAL_CONTACT_EMAIL}</a>
+
+export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-              <Heart className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold text-foreground">NeuRafiki</span>
-          </div>
-          <Link href="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-          </Link>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-10 max-w-3xl space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Privacy Policy</h1>
-          <p className="text-sm text-muted-foreground">Last updated: 2026-07-05 &middot; Version 1.0</p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>What data we collect</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+    <LegalPage
+      title="Privacy policy"
+      intro={`NeuRafiki is a neurodiversity screening and check-in tool run by ${LEGAL_OWNER}. This policy explains, in plain language, what information we collect, why, who helps us process it, and the choices you have. It is designed to support applicable data-protection requirements; it doesn't claim certification under any particular law.`}
+      sections={[
+        {
+          id: "collect",
+          heading: "What we collect",
+          body: (
+            <ul>
+              <li>
+                <strong>Your account:</strong> name, email address and sign-in details.
+              </li>
+              <li>
+                <strong>Profiles:</strong> the people you screen, which may include a child you are the parent or
+                guardian of.
+              </li>
+              <li>
+                <strong>Screening answers and results:</strong> your responses across areas such as autism, ADHD,
+                dyslexia, dyspraxia, sensory processing and executive function, and the results worked out from them.
+              </li>
+              <li>
+                <strong>Check-ins:</strong> the options you choose and any notes you add.
+              </li>
+              <li>
+                <strong>Consents:</strong> what you agreed to, for whom, and when.
+              </li>
+              <li>
+                <strong>Payments:</strong> your plan, payment status and reference numbers. Card and mobile-money
+                details are handled by our payment provider and never reach us.
+              </li>
+              <li>
+                <strong>Messages you send us</strong> through the contact form.
+              </li>
+            </ul>
+          ),
+        },
+        {
+          id: "children",
+          heading: "Children",
+          body: (
             <p>
-              NeuRafiki collects account information (name, email), profile information for each person you assess
-              (which may include a child or other dependant you are the parent or guardian of), and your responses
-              to self-assessment screening questions across domains such as autism spectrum, ADHD, dyslexia,
-              dyspraxia, sensory processing, and executive function.
+              Some of what is stored is about children and is sensitive. We only collect a child&apos;s screening
+              answers with the explicit consent of their parent or legal guardian, asked for immediately before the
+              screening begins. That consent can be withdrawn at any time.
             </p>
+          ),
+        },
+        {
+          id: "use",
+          heading: "How we use it",
+          body: (
+            <ul>
+              <li>To run screenings, work out results and show you reports.</li>
+              <li>To save check-ins and send follow-up reminders you ask for.</li>
+              <li>To take payments and manage your plan.</li>
+              <li>To answer your messages, keep the service secure and fix problems.</li>
+            </ul>
+          ),
+        },
+        {
+          id: "ai",
+          heading: "The AI companion",
+          body: (
             <p>
-              Because this platform is used to screen for neurodivergence in both adults and children, some of the
-              data we store is about minors and is inherently sensitive. We only collect a child&apos;s assessment
-              data with the explicit, revocable consent of their parent or legal guardian, captured immediately
-              before the assessment begins.
+              The companion is optional and asks for your consent before first use. It receives the message you type
+              and, during a screening, the wording of the current question and its answer options. It never receives
+              your answers. It runs on Cloudflare Workers AI, using an open AI model. We don&apos;t save your
+              conversations.
             </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>How your data is stored and protected</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+          ),
+        },
+        {
+          id: "anda",
+          heading: "Sharing with ANDA",
+          body: (
             <p>
-              Assessment responses and results are encrypted at rest using PostgreSQL&apos;s <code>pgcrypto</code>{" "}
-              extension. Only our server-side API, using a service-role database connection, can request decrypted
-              values through a restricted database function -- your browser and any client-side code never has
-              direct access to the encryption key or to plaintext responses.
+              ANDA, the African Neurodiversity Alliance, is our sister product for support plans, with its own
+              account and billing. If you link the two, NeuRafiki sends ANDA a structured summary of a screening or
+              check-in (for example the areas explored and options chosen), and only when you tick the sharing box for
+              it. Raw screening answers and private notes are never shared. You can unlink at any time in your
+              account.
             </p>
+          ),
+        },
+        {
+          id: "processors",
+          heading: "Who helps us process data",
+          body: (
+            <>
+              <ul>
+                <li>
+                  <strong>Supabase:</strong> database and sign-in.
+                </li>
+                <li>
+                  <strong>Vercel:</strong> hosting, plus Vercel Analytics for anonymous, aggregated page-visit counts.
+                </li>
+                <li>
+                  <strong>Flutterwave:</strong> payments.
+                </li>
+                <li>
+                  <strong>Cloudflare:</strong> the AI companion, only as described above.
+                </li>
+                <li>
+                  <strong>Sentry:</strong> error reports, so we can find and fix bugs.
+                </li>
+                <li>
+                  <strong>Our email provider:</strong> sending reminders and forwarding contact messages.
+                </li>
+              </ul>
+              <p>We don&apos;t sell personal information, and we don&apos;t use it for advertising.</p>
+            </>
+          ),
+        },
+        {
+          id: "security",
+          heading: "Keeping it safe",
+          body: (
             <p>
-              Row-level security policies restrict every account to its own data. Score computation happens
-              server-side so that assessment results cannot be tampered with by modifying requests from the browser.
+              Data is encrypted in transit. Screening answers and results are also encrypted in the database, and only
+              our server can decrypt them. Results are worked out on the server so they can&apos;t be tampered with.
+              Database rules limit every account to its own records. No system is perfectly secure, so please use a
+              strong password and tell us straight away if you think your account has been misused.
             </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Data retention</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+          ),
+        },
+        {
+          id: "rights",
+          heading: "Your choices and rights",
+          body: (
+            <ul>
+              <li>
+                See and update your information in your <Link href="/account">account</Link>.
+              </li>
+              <li>Withdraw consent for a profile, the companion or ANDA sharing at any time.</li>
+              <li>
+                Ask for a copy of your data, a correction, or deletion of your account and its data by emailing {email}.
+              </li>
+            </ul>
+          ),
+        },
+        {
+          id: "retention",
+          heading: "How long we keep it",
+          body: (
             <p>
-              We retain assessment data for as long as your account is active, or until you request deletion. You (or,
-              for a child profile, their parent/guardian) may revoke consent at any time, which stops further use of
-              that data for active screening purposes. Revoking consent does not by itself delete historical records
-              needed for legal or safety obligations, but you may separately request full deletion.
+              We keep your information while your account is open, or until you ask us to delete it. Withdrawing
+              consent stops further use of that data for screening; ask us separately if you also want it deleted.
+              Payment records are kept, anonymised, for as long as the law requires.
             </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Your rights and how to reach us</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+          ),
+        },
+        {
+          id: "changes",
+          heading: "Changes and contact",
+          body: (
             <p>
-              You may request access to, correction of, or deletion of any data associated with your account or a
-              profile you manage, including a child&apos;s profile, at any time.
+              If we change this policy in a way that matters, we&apos;ll update the date above and tell you in the app
+              or by email. Questions or requests: {email}. NeuRafiki is run by {LEGAL_OWNER}.
             </p>
-            <p>
-              To exercise these rights or ask a question about this policy, contact us at{" "}
-              <a className="text-primary hover:underline" href="mailto:privacy@neurafiki.org">
-                privacy@neurafiki.org
-              </a>
-              .
-            </p>
-          </CardContent>
-        </Card>
-
-        <p className="text-xs text-muted-foreground">
-          This is a placeholder policy pending legal review. It is intended to describe our current technical
-          practices accurately and should be replaced with counsel-reviewed language before wide public launch.
-        </p>
-      </div>
-    </div>
+          ),
+        },
+      ]}
+    />
   )
 }
