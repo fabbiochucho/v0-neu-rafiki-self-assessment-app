@@ -10,6 +10,7 @@ import { SUBSCRIPTION_TIERS } from "@/lib/constants/subscriptions"
 import { getSiblingAppUrl } from "@/lib/federation/config"
 import { getActiveAllianceLink } from "@/lib/federation/authorize"
 import { fetchAndaEntitlements } from "@/lib/federation/anda"
+import { DeleteAccount } from "@/components/account/delete-account"
 
 function EntitlementList({ items }: { items: [string, boolean][] }) {
   return (
@@ -125,6 +126,20 @@ export default async function AccountPage() {
             </CardContent>
           </Card>
         )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Delete your account</CardTitle>
+            <CardDescription>
+              Permanently deletes your account and everything in it: profiles, screening answers and results,
+              follow-ups, check-ins, consents and any link to ANDA. This can&apos;t be undone. Your ANDA account,
+              if you have one, isn&apos;t affected.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DeleteAccount email={user.email ?? ""} />
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
