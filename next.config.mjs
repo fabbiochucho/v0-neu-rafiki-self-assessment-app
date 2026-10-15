@@ -1,4 +1,4 @@
-import { withSentryConfig } from "@sentry/nextjs"
+import { withSentryConfig } from "@sentry/nextjs/config"
 
 // Security headers on every response. The Content-Security-Policy is set
 // per request in middleware.ts (it carries a nonce).
