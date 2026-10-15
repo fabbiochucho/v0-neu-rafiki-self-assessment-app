@@ -20,8 +20,10 @@ jobs:
       # typecheck/build/unit tests (no e2e, no live network calls), but treat
       # this workflow file with the same care as production config since
       # real secrets flow through it.
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      # Dependabot PRs don't receive Actions secrets; fall back to the public
+      # (browser-shipped) Supabase URL and anon key so they can still build.
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://eyouboihrzqtmvkbmais.supabase.co' }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5b3Vib2locnpxdG12a2JtYWlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzODgzMTgsImV4cCI6MjA5ODk2NDMxOH0.kOJ4rImowqJGAYb5fuNjkHSrJhz_i3d8eyBmj4ONNY8' }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       ASSESSMENT_ENCRYPTION_KEY: ${{ secrets.ASSESSMENT_ENCRYPTION_KEY }}
       # Phase 1 federation (optional feature). The federation keypair here is
@@ -34,15 +36,15 @@ jobs:
       FEDERATION_ALLIANCE_PUBLIC_KEY: ${{ secrets.FEDERATION_ALLIANCE_PUBLIC_KEY }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: 11
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
