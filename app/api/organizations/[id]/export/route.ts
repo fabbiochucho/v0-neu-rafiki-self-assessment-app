@@ -7,7 +7,8 @@ import { getAdministeredOrg, otherMembers } from "@/lib/organizations"
 // the organisation, its members, bulk enrolments and the list of
 // assessments linked to it. Screening answers and results aren't included;
 // they belong to each member's personal account.
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const supabase = await createClient()
   const {
     data: { user },
