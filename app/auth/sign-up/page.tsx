@@ -249,7 +249,7 @@ export default function SignUpPage() {
                       required
                     />
                     <Label htmlFor="agreeToTerms" className="block min-w-0 text-sm font-normal leading-snug">
-                      I agree to the{" "}
+                      I&apos;m 18 or older and agree to the{" "}
                       <Link href="/privacy" target="_blank" className="text-primary hover:underline">
                         Privacy Policy
                       </Link>{" "}
