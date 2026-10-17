@@ -7,4 +7,4 @@ export const LEGAL_OWNER = `${LEGAL_ENTITY} (Operating as DiBadili Institute, al
 export const COPYRIGHT_HOLDER = "DiBadili Institute"
 export const LEGAL_CONTACT_EMAIL = "privacy@becomechange.institute"
 export const BECOMECHANGE_URL = "https://becomechange.institute"
-export const LEGAL_UPDATED = "17 October 2026"
+export const LEGAL_UPDATED = "18 October 2026"

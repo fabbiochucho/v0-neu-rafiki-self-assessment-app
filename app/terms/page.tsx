@@ -43,6 +43,11 @@ export default function TermsPage() {
           body: (
             <ul>
               <li>
+                You must be 18 or older to create an account. Children and teenagers don&apos;t have their own accounts:
+                a parent or guardian adds them as a profile. If we learn that someone under 18 has made an account, we
+                close it and delete its data, unless their parent or guardian takes it over.
+              </li>
+              <li>
                 Give accurate information and keep your password safe. You&apos;re responsible for activity on your
                 account.
               </li>
@@ -60,7 +65,12 @@ export default function TermsPage() {
                 are processed by Flutterwave.
               </li>
               <li>NeuRafiki and ANDA are billed separately. A plan for one doesn&apos;t include the other.</li>
-              <li>For billing questions or refund requests, email {email}.</li>
+              <li>
+                Refunds: if you&apos;re not happy with a plan, email {email} within 14 days of paying and we&apos;ll refund
+                that payment in full. After 14 days payments aren&apos;t refunded, but the plan keeps working until the end
+                of the period you paid for. A payment taken by mistake, such as a double charge, is always refunded.
+              </li>
+              <li>For other billing questions, email {email}.</li>
             </ul>
           ),
         },
