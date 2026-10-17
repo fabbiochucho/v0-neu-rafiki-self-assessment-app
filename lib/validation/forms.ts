@@ -10,9 +10,7 @@ export const signUpSchema = z.object({
     .regex(/[0-9]/, "Password must contain a number"),
   confirmPassword: z.string(),
   fullName: z.string().min(2, "Name must be at least 2 characters"),
-  accountType: z.enum(["individual", "organization"], {
-    errorMap: () => ({ message: "Please select an account type" }),
-  }),
+  accountType: z.enum(["individual", "organization"], { error: "Please select an account type" }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -42,9 +40,7 @@ export const profileSchema = z.object({
 export const assessmentStartSchema = z.object({
   profileId: z.string().min(1, "Please select a profile"),
   domains: z.array(z.string()).min(1, "Please select at least one domain"),
-  respondentType: z.enum(["self", "parent", "educator", "caregiver"], {
-    errorMap: () => ({ message: "Please select a respondent type" }),
-  }),
+  respondentType: z.enum(["self", "parent", "educator", "caregiver"], { error: "Please select a respondent type" }),
 })
 
 // Organization schemas
@@ -66,7 +62,7 @@ export async function validateFormData<T>(schema: z.ZodSchema, data: unknown): P
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errors: Record<string, string[]> = {}
-      error.errors.forEach((err) => {
+      error.issues.forEach((err) => {
         const path = err.path.join(".")
         if (!errors[path]) {
           errors[path] = []
