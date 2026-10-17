@@ -35,7 +35,9 @@ export default withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
-  silent: true,
+  // Print upload results in CI builds (Vercel sets CI) so a missing token or
+  // wrong org/project slug shows in the build log; stay quiet locally.
+  silent: !process.env.CI,
   widenClientFileUpload: false,
   sourcemaps: {
     disable: !process.env.SENTRY_AUTH_TOKEN,
