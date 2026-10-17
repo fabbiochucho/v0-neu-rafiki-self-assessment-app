@@ -5,7 +5,8 @@ import { getAdministeredOrg, otherMembers } from "@/lib/organizations"
 
 // POST /api/organizations/:id/transfer { user_id } -- the primary admin hands
 // the organisation to another existing member, who becomes an admin.
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const supabase = await createClient()
   const {
     data: { user },
