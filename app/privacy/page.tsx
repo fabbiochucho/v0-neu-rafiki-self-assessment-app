@@ -119,7 +119,7 @@ export default function PrivacyPage() {
                   <strong>Sentry:</strong> error reports, so we can find and fix bugs.
                 </li>
                 <li>
-                  <strong>Our email provider:</strong> sending reminders and forwarding contact messages.
+                  <strong>WhoGoHost (Go54):</strong> email hosting, for sending reminders and forwarding contact messages.
                 </li>
               </ul>
               <p>We don&apos;t sell personal information, and we don&apos;t use it for advertising.</p>

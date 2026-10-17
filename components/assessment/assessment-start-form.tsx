@@ -308,11 +308,11 @@ export function AssessmentStartForm({ userProfiles, domains, questionCounts }: A
                   <Label htmlFor="childConsent" className="text-sm font-normal leading-snug">
                     I consent, as this child&apos;s parent/guardian, to NeuRafiki collecting and storing their
                     assessment responses as described in the{" "}
-                    <Link href="/privacy" target="_blank" className="text-primary hover:underline">
+                    <Link href="/privacy" target="_blank" className="text-primary underline underline-offset-2">
                       Privacy Policy
                     </Link>{" "}
                     and{" "}
-                    <Link href="/terms" target="_blank" className="text-primary hover:underline">
+                    <Link href="/terms" target="_blank" className="text-primary underline underline-offset-2">
                       Terms
                     </Link>
                     .
