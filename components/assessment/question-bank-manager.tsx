@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createBrowserClient } from "@supabase/ssr"
+import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -44,71 +44,70 @@ export function QuestionBankManager() {
   const [respondentFilter, setRespondentFilter] = useState<string>("all")
   const [loading, setLoading] = useState(true)
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  )
-
   useEffect(() => {
+    const loadDomains = async () => {
+      const supabase = createClient()
+      try {
+        const { data: domainRows, error } = await supabase.from("assessment_domains").select("*").order("name")
+        if (error) throw error
+
+        // Count per domain in the database: selecting every question row
+        // would stop at Supabase's 1,000-row default and undercount.
+        const counts: Record<string, number> = {}
+        await Promise.all(
+          (domainRows || []).map(async (d: Domain) => {
+            const { count, error: qError } = await supabase
+              .from("questions")
+              .select("id", { count: "exact", head: true })
+              .eq("domain_id", d.id)
+            if (qError) throw qError
+            counts[d.id] = count ?? 0
+          }),
+        )
+
+        setDomains(domainRows || [])
+        setQuestionCounts(counts)
+      } catch (error) {
+        console.error("Error loading domains:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
     loadDomains()
   }, [])
 
   useEffect(() => {
-    if (selectedDomain !== "all") {
-      loadQuestions()
+    if (selectedDomain === "all") return
+    const loadQuestions = async () => {
+      try {
+        let query = createClient()
+          .from("questions")
+          .select("*")
+          .eq("domain_id", selectedDomain)
+          .order("question_id", { ascending: true })
+
+        if (searchTerm) {
+          query = query.ilike("question_text", `%${searchTerm}%`)
+        }
+
+        if (ageGroupFilter !== "all") {
+          query = query.eq("age_group", ageGroupFilter)
+        }
+
+        if (respondentFilter !== "all") {
+          query = query.eq("respondent_type", respondentFilter)
+        }
+
+        const { data, error } = await query
+
+        if (error) throw error
+        setQuestions(data || [])
+      } catch (error) {
+        console.error("Error loading questions:", error)
+      }
     }
+    loadQuestions()
   }, [selectedDomain, searchTerm, ageGroupFilter, respondentFilter])
-
-  const loadDomains = async () => {
-    try {
-      const { data: domainRows, error } = await supabase.from("assessment_domains").select("*").order("name")
-      if (error) throw error
-
-      const { data: questionRows, error: qError } = await supabase.from("questions").select("domain_id")
-      if (qError) throw qError
-
-      const counts: Record<string, number> = {}
-      for (const row of questionRows || []) {
-        counts[row.domain_id] = (counts[row.domain_id] || 0) + 1
-      }
-
-      setDomains(domainRows || [])
-      setQuestionCounts(counts)
-    } catch (error) {
-      console.error("Error loading domains:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const loadQuestions = async () => {
-    try {
-      let query = supabase
-        .from("questions")
-        .select("*")
-        .eq("domain_id", selectedDomain)
-        .order("question_id", { ascending: true })
-
-      if (searchTerm) {
-        query = query.ilike("question_text", `%${searchTerm}%`)
-      }
-
-      if (ageGroupFilter !== "all") {
-        query = query.eq("age_group", ageGroupFilter)
-      }
-
-      if (respondentFilter !== "all") {
-        query = query.eq("respondent_type", respondentFilter)
-      }
-
-      const { data, error } = await query
-
-      if (error) throw error
-      setQuestions(data || [])
-    } catch (error) {
-      console.error("Error loading questions:", error)
-    }
-  }
 
   const getQuestionTypeIcon = (type: string) => {
     switch (type) {
