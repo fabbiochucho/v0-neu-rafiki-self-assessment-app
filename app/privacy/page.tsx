@@ -78,7 +78,7 @@ export default function PrivacyPage() {
             <p>
               The companion is optional and asks for your consent before first use. It receives the message you type
               and, during a screening, the wording of the current question and its answer options. It never receives
-              your answers. It runs on Cloudflare Workers AI, using an open AI model. We don&apos;t save your
+              your answers. It runs on Cloudflare Workers AI, using Meta&apos;s open Llama model (Built with Llama). We don&apos;t save your
               conversations.
             </p>
           ),
