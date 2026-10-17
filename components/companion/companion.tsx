@@ -157,7 +157,7 @@ export function Companion({ mode, assessmentId, questionId, onReturn }: Props) {
             </div>
           </form>
           <p className="text-xs text-muted-foreground">
-            AI explanation, not part of your results. It can&apos;t see or change your scores, and it doesn&apos;t give a
+            You&apos;re chatting with an AI, not a person. Its explanation isn&apos;t part of your results. It can&apos;t see or change your scores, and it doesn&apos;t give a
             diagnosis. Conversations aren&apos;t saved.
           </p>
         </div>

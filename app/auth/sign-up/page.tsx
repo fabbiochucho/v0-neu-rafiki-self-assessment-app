@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Heart } from "lucide-react"
 import { Turnstile, TURNSTILE_SITE_KEY } from "@/components/turnstile"
+import { LEGAL_UPDATED } from "@/lib/legal"
 
 const CONSENT_VERSION = "1.0"
 
@@ -102,6 +103,9 @@ export default function SignUpPage() {
           data: {
             full_name: fullName,
             account_type: accountType,
+            // Which version of the terms and privacy policy this person agreed to.
+            terms_version: LEGAL_UPDATED,
+            terms_accepted_at: new Date().toISOString(),
           },
         },
       });
