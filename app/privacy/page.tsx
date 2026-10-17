@@ -112,7 +112,8 @@ export default function PrivacyPage() {
                   <strong>Flutterwave:</strong> payments.
                 </li>
                 <li>
-                  <strong>Cloudflare:</strong> the AI companion, only as described above.
+                  <strong>Cloudflare:</strong> the AI companion, only as described above, and the Turnstile
+                  security check on sign-up and sign-in.
                 </li>
                 <li>
                   <strong>Sentry:</strong> error reports, so we can find and fix bugs.
@@ -122,6 +123,58 @@ export default function PrivacyPage() {
                 </li>
               </ul>
               <p>We don&apos;t sell personal information, and we don&apos;t use it for advertising.</p>
+            </>
+          ),
+        },
+        {
+          id: "legal-basis",
+          heading: "Why we're allowed to use it",
+          body: (
+            <ul>
+              <li>
+                <strong>To provide the service you signed up for:</strong> your account, profiles, screenings, results and check-ins.
+              </li>
+              <li>
+                <strong>Your consent:</strong> for information about a person&apos;s health, development or support
+                needs, and for screenings, the AI companion and sharing with ANDA. You can withdraw it at any time.
+              </li>
+              <li>
+                <strong>The law:</strong> keeping payment records.
+              </li>
+              <li>
+                <strong>Keeping the service safe:</strong> preventing abuse and fixing problems.
+              </li>
+            </ul>
+          ),
+        },
+        {
+          id: "transfers",
+          heading: "Where your data is processed",
+          body: (
+            <p>
+              The providers listed above may store or process data outside your country, including in the United
+              States and the European Union. We use providers whose data-processing terms commit them to protect it, and
+              we only send each one what its job needs.
+            </p>
+          ),
+        },
+        {
+          id: "cookies",
+          heading: "Cookies and similar storage",
+          body: (
+            <>
+              <p>We only use what the site needs to work:</p>
+              <ul>
+                <li>a sign-in cookie, so you stay signed in;</li>
+                <li>Cloudflare Turnstile, a security check on the sign-up and sign-in forms that tells people from bots;</li>
+                <li>your display choices, saved in your browser&apos;s local storage.</li>
+              </ul>
+              <p>
+                Vercel Analytics counts page visits without cookies and without identifying you. We don&apos;t use
+                advertising or cross-site tracking, and we don&apos;t allow other companies to track you across
+                websites through our service. Because we don&apos;t track you across sites, we respond to a browser&apos;s
+                &quot;Do Not Track&quot; signal in the same way as when there is no signal.
+              </p>
             </>
           ),
         },
@@ -151,6 +204,11 @@ export default function PrivacyPage() {
                 <Link href="/account">account page</Link>.
               </li>
               <li>Ask for a copy of your data or a correction by emailing {email}.</li>
+              <li>
+                If you&apos;re unhappy with how we handle your data, you can complain to the Nigeria Data Protection
+                Commission (<a href="https://ndpc.gov.ng">ndpc.gov.ng</a>) or to the data-protection authority where you
+                live. We&apos;d like the chance to put it right first, so please contact us too.
+              </li>
             </ul>
           ),
         },

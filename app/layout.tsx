@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Fraunces, JetBrains_Mono, Source_Sans_3 } from "next/font/google"
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@/components/analytics"
 import { DemoBanner } from "@/components/demo/demo-banner"
 import { SiteFooter } from "@/components/site-footer"
 import "./globals.css"

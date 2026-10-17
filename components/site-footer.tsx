@@ -15,6 +15,7 @@ const LEGAL = [
   ["/privacy", "Privacy policy"],
   ["/terms", "Terms of use"],
   ["/guidelines", "Community guidelines"],
+  ["/accessibility", "Accessibility"],
 ]
 
 // Site-wide footer (rendered once in app/layout.tsx). Hidden when printing
