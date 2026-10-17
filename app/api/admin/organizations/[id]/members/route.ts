@@ -9,7 +9,7 @@ import { enrollMember, MEMBER_ROLES, type MemberRole } from "@/lib/organizations
 // The primary admin (organizations.admin_user_id) can't be removed or
 // demoted here; they hand over from their account page instead.
 
-type Ctx = { params: { id: string } }
+type Ctx = { params: Promise<{ id: string }> }
 
 async function authorise(orgId: string) {
   const supabase = await createClient()
@@ -33,7 +33,8 @@ async function authorise(orgId: string) {
 
 const isRole = (v: unknown): v is MemberRole => typeof v === "string" && (MEMBER_ROLES as readonly string[]).includes(v)
 
-export async function GET(_req: NextRequest, { params }: Ctx) {
+export async function GET(_req: NextRequest, props: Ctx) {
+  const params = await props.params;
   const a = await authorise(params.id)
   if ("error" in a) return a.error
   const { data, error } = await a.service
@@ -55,7 +56,8 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
   })
 }
 
-export async function POST(req: NextRequest, { params }: Ctx) {
+export async function POST(req: NextRequest, props: Ctx) {
+  const params = await props.params;
   const a = await authorise(params.id)
   if ("error" in a) return a.error
   const body = await req.json().catch(() => ({}))
@@ -73,7 +75,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: Ctx) {
+export async function PATCH(req: NextRequest, props: Ctx) {
+  const params = await props.params;
   const a = await authorise(params.id)
   if ("error" in a) return a.error
   const body = await req.json().catch(() => ({}))
@@ -95,7 +98,8 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   return NextResponse.json({ ok: true })
 }
 
-export async function DELETE(req: NextRequest, { params }: Ctx) {
+export async function DELETE(req: NextRequest, props: Ctx) {
+  const params = await props.params;
   const a = await authorise(params.id)
   if ("error" in a) return a.error
   const memberId = new URL(req.url).searchParams.get("memberId")

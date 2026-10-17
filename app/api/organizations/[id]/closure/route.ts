@@ -17,7 +17,8 @@ async function authorise(id: string) {
 
 // POST /api/organizations/:id/closure -- schedule closure in 30 days. Only
 // when the admin is the sole member; otherwise they must hand over first.
-export async function POST(_request: Request, { params }: { params: { id: string } }) {
+export async function POST(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const a = await authorise(params.id)
   if ("error" in a) return a.error
   if ((await otherMembers(a.service, a.org.id, a.userId)).length > 0) {
@@ -30,7 +31,8 @@ export async function POST(_request: Request, { params }: { params: { id: string
 }
 
 // DELETE /api/organizations/:id/closure -- cancel a scheduled closure.
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const a = await authorise(params.id)
   if ("error" in a) return a.error
   const { error } = await a.service.from("organizations").update({ closing_at: null }).eq("id", a.org.id)
