@@ -11,5 +11,6 @@ Read these before changing NeuRafiki.
 - **New vendor, script, SDK or font:** update `docs/DPA_REGISTER.md`, the processors list in `app/privacy/page.tsx` and the CSP in `lib/csp.ts` in the same PR, and bump `LEGAL_UPDATED`. Fonts stay self-hosted through `next/font`.
 - **Accessibility:** build to WCAG 2.2 AA (see `/accessibility`).
 - **Packages:** check every new package exists and is the one you meant before adding it. Commit the lockfile.
+- **AI model licence:** the default model is Meta Llama, whose licence requires "Built with Llama" to be shown. It appears in the chat notice and the privacy policy's AI section; change both if the model or provider changes.
 - **Legal text:** the DPO clause in `lib/dpo.ts` is verbatim and test-guarded; don't edit it.
 - **Payments:** a plan is paid per month and never renews automatically. Don't add wording that says it does.
