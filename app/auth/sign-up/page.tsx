@@ -250,11 +250,11 @@ export default function SignUpPage() {
                     />
                     <Label htmlFor="agreeToTerms" className="block min-w-0 text-sm font-normal leading-snug">
                       I&apos;m 18 or older and agree to the{" "}
-                      <Link href="/privacy" target="_blank" className="text-primary hover:underline">
+                      <Link href="/privacy" target="_blank" className="text-primary underline underline-offset-2">
                         Privacy Policy
                       </Link>{" "}
                       and{" "}
-                      <Link href="/terms" target="_blank" className="text-primary hover:underline">
+                      <Link href="/terms" target="_blank" className="text-primary underline underline-offset-2">
                         Terms
                       </Link>
                       . This may include storing my child&apos;s assessment responses if I assess a child.
