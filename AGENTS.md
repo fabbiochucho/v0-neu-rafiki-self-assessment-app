@@ -8,7 +8,7 @@ Read these before changing NeuRafiki.
 - **AI:** the companion needs consent, never receives answers or scores, and says it's an AI, not a person.
 - **Not a companion chatbot:** the companion only explains screening questions and results. It has no persona, keeps no memory between sessions, and starts with an "AI, not a person" notice. Adding a persona, relationship features or memory makes it a companion chatbot under laws such as California SB 243, so re-check those first.
 - **Sharing with ANDA:** summaries only, with the per-item consent box; never raw answers or free text.
-- **New vendor, script, SDK or font:** update `docs/DPA_REGISTER.md`, the processors list in `app/privacy/page.tsx` and the CSP in `lib/csp.ts` in the same PR, and bump `LEGAL_UPDATED`. Fonts stay self-hosted through `next/font`.
+- **New vendor, script, SDK or font:** update the DPA register (`neurafiki/DPA_REGISTER.md` in the private repo `fabbiochucho/neurodiversity-private`), the processors list in `app/privacy/page.tsx` and the CSP in `lib/csp.ts` in the same PR, and bump `LEGAL_UPDATED`. Fonts stay self-hosted through `next/font`.
 - **Accessibility:** build to WCAG 2.2 AA (see `/accessibility`).
 - **Packages:** check every new package exists and is the one you meant before adding it. Commit the lockfile.
 - **AI model licence:** the default model is Meta Llama, whose licence requires "Built with Llama" to be shown. It appears in the chat notice and the privacy policy's AI section; change both if the model or provider changes.
