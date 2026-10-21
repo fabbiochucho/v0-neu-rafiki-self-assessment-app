@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server"
 import { createServiceRoleClient, getAssessmentEncryptionKey } from "@/lib/supabase/service"
 import { AssessmentQuestions } from "@/components/assessment/assessment-questions"
 import { loadAssessmentQuestions } from "@/lib/assessment/questions"
+import { localizeQuestions } from "@/lib/assessment/question-translations"
+import { isScreeningLanguage } from "@/lib/assessment/screening-i18n"
 import { isCompanionConfigured } from "@/lib/entitlements"
 
 interface AssessmentQuestionsPageProps {
@@ -49,6 +51,8 @@ export default async function AssessmentQuestionsPage({ params }: AssessmentQues
   }
 
   const { data: questions } = await loadAssessmentQuestions(supabase, assessment)
+  const language = isScreeningLanguage(assessment.language) ? assessment.language : "en"
+  const shownQuestions = await localizeQuestions(supabase, questions || [], language)
 
   // Get existing responses. response_value is stored encrypted at rest (see
   // scripts/010_encrypt_sensitive_columns.sql), so decryption must happen via
@@ -79,7 +83,8 @@ export default async function AssessmentQuestionsPage({ params }: AssessmentQues
   return (
     <AssessmentQuestions
       assessment={assessment}
-      questions={questions || []}
+      questions={shownQuestions}
+      language={language}
       existingResponses={existingResponses || []}
       companionEnabled={isCompanionConfigured()}
     />
