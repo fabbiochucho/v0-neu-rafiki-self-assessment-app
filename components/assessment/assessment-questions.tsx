@@ -19,6 +19,7 @@ import {
   sectionIndexFor,
   sectionTransitionMessage,
 } from "@/lib/assessment/journey"
+import { informantText, optionLabel, screeningText, type ScreeningKey, type ScreeningLanguage } from "@/lib/assessment/screening-i18n"
 
 interface Question {
   id: string
@@ -26,6 +27,7 @@ interface Question {
   question_text: string
   question_type: string
   options: string[]
+  translated?: boolean
   domain_id: string
   subdomain?: string | null
   assessment_domains: { name: string; description: string | null }
@@ -51,6 +53,7 @@ interface AssessmentQuestionsProps {
   questions: Question[]
   existingResponses: AssessmentResponse[]
   companionEnabled?: boolean
+  language?: ScreeningLanguage
 }
 
 type TextSize = "base" | "lg" | "xl"
@@ -62,7 +65,9 @@ export function AssessmentQuestions({
   questions,
   existingResponses,
   companionEnabled = false,
+  language = "en",
 }: AssessmentQuestionsProps) {
+  const tr = (key: ScreeningKey, vars?: Record<string, string | number>) => screeningText(language, key, vars)
   const initialResponses = useMemo(
     () => Object.fromEntries(existingResponses.map((r) => [r.question_id, r.response_value])) as Record<string, string>,
     [existingResponses],
@@ -152,12 +157,12 @@ export function AssessmentQuestions({
           body: JSON.stringify({ question_id: questionId, response_value: responseValue }),
         })
         const body = await res.json().catch(() => ({}))
-        if (!res.ok) throw new Error(body.error || "Failed to save your answer")
+        if (!res.ok) throw new Error(body.error || tr("saveFailed"))
         setSaveState("saved")
         return true
       } catch (err) {
         setSaveState("error")
-        setError(err instanceof Error ? err.message : "Failed to save your answer")
+        setError(err instanceof Error ? err.message : tr("saveFailed"))
         return false
       }
     })
@@ -172,7 +177,7 @@ export function AssessmentQuestions({
 
   const handleNext = async () => {
     if (!responses[currentQuestion.id]) {
-      setError("Please choose an answer before moving on")
+      setError(tr("chooseAnswer"))
       return
     }
     // Wait for any in-flight autosave before moving on.
@@ -192,10 +197,10 @@ export function AssessmentQuestions({
       setIsCompleting(true)
       const res = await fetch(`/api/assessments/${assessment.id}/complete`, { method: "POST" })
       const body = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(body.error || "Failed to complete assessment")
+      if (!res.ok) throw new Error(body.error || tr("completeFailed"))
       router.push(`/assessment/${assessment.id}/results`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to complete assessment")
+      setError(err instanceof Error ? err.message : tr("completeFailed"))
       setIsCompleting(false)
     }
   }
@@ -212,9 +217,9 @@ export function AssessmentQuestions({
       <div className="min-h-screen flex items-center justify-center">
         <Card>
           <CardContent className="p-6">
-            <p>No questions are available for this combination of age group, respondent and areas.</p>
+            <p>{tr("noQuestions")}</p>
             <Link href="/dashboard">
-              <Button className="mt-4">Return to Dashboard</Button>
+              <Button className="mt-4">{tr("backToDashboard")}</Button>
             </Link>
           </CardContent>
         </Card>
@@ -235,30 +240,32 @@ export function AssessmentQuestions({
               <Link href="/dashboard">
                 <Button variant="ghost" size="sm">
                   <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Dashboard
+                  {tr("dashboard")}
                 </Button>
               </Link>
               <div>
-                <h1 className="font-semibold">Screening for {name}</h1>
+                <h1 className="font-semibold">{tr("screeningFor", { name })}</h1>
                 <p className="text-sm text-muted-foreground">
-                  Answered by: {informantLabelForRespondentType(assessment.respondent_type)}
+                  {tr("answeredBy", {
+                    who: informantText(language, assessment.respondent_type, informantLabelForRespondentType(assessment.respondent_type)),
+                  })}
                 </p>
               </div>
             </div>
             <Link href="/dashboard?paused=1">
               <Button variant="outline" size="sm">
                 <PauseCircle className="h-4 w-4 mr-2" aria-hidden="true" />
-                Save and continue later
+                {tr("saveLater")}
               </Button>
             </Link>
           </div>
         </div>
       </header>
 
-      <main className={`container mx-auto px-4 py-8 max-w-3xl ${contentClass}`}>
+      <main lang={language === "en" ? undefined : language} className={`container mx-auto px-4 py-8 max-w-3xl ${contentClass}`}>
         {/* Accessibility / display controls */}
-        <div role="group" aria-label="Display options" className="mb-6 flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-muted-foreground">Text size:</span>
+        <div role="group" aria-label={tr("displayOptions")} className="mb-6 flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-muted-foreground">{tr("textSize")}</span>
           {(["base", "lg", "xl"] as TextSize[]).map((size, i) => (
             <Button
               key={size}
@@ -268,7 +275,7 @@ export function AssessmentQuestions({
               aria-pressed={textSize === size}
               onClick={() => setTextSize(size)}
             >
-              {["Standard", "Large", "Larger"][i]}
+              {tr((["sizeStandard", "sizeLarge", "sizeLarger"] as const)[i])}
             </Button>
           ))}
           <Button
@@ -278,7 +285,7 @@ export function AssessmentQuestions({
             aria-pressed={spacious}
             onClick={() => setSpacious((v) => !v)}
           >
-            Extra spacing
+            {tr("extraSpacing")}
           </Button>
         </div>
 
@@ -286,22 +293,22 @@ export function AssessmentQuestions({
         <div className="mb-8">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-2 text-sm">
             <span className="font-medium">
-              Area {sectionIdx + 1} of {sections.length}: {section.domain_name}
+              {tr("areaOf", { n: sectionIdx + 1, total: sections.length, name: section.domain_name })}
             </span>
             <span className="text-muted-foreground">
-              <span aria-label={`Question ${currentQuestionIndex + 1} of ${questions.length}`}>
+              <span aria-label={tr("questionOf", { n: currentQuestionIndex + 1, total: questions.length })}>
                 {currentQuestionIndex + 1} / {questions.length}
               </span>
-              {remainingMinutes > 0 && <> · about {remainingMinutes} min left</>}
+              {remainingMinutes > 0 && <> · {tr("minLeft", { n: remainingMinutes })}</>}
             </span>
           </div>
-          <Progress value={progress} className="h-2" aria-label={`${answeredCount} of ${questions.length} answered`} />
+          <Progress value={progress} className="h-2" aria-label={tr("answeredOf", { n: answeredCount, total: questions.length })} />
           <p className="mt-2 text-xs text-muted-foreground" aria-live="polite">
             {saveState === "saving"
-              ? "Saving…"
+              ? tr("saving")
               : saveState === "saved"
-                ? "Saved. Your answers save automatically, so you can pause at any time."
-                : "Your answers save automatically, so you can pause at any time."}
+                ? tr("saved")
+                : tr("autosave")}
           </p>
         </div>
 
@@ -311,25 +318,30 @@ export function AssessmentQuestions({
               <div ref={focusRef} tabIndex={-1} className="outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md">
                 {sectionIdx > 0 && (
                   <p className="text-sm font-medium text-primary mb-2">
-                    {sectionTransitionMessage(sections.length - sectionIdx)}
+                    {language === "en"
+                      ? sectionTransitionMessage(sections.length - sectionIdx)
+                      : sections.length - sectionIdx <= 0
+                        ? tr("lastArea")
+                        : sections.length - sectionIdx === 1
+                          ? tr("oneMoreArea")
+                          : tr("moreAreas", { n: sections.length - sectionIdx })}
                   </p>
                 )}
-                {sectionIdx === 0 && isResuming && <p className="text-sm text-muted-foreground mb-2">Welcome back.</p>}
+                {sectionIdx === 0 && isResuming && <p className="text-sm text-muted-foreground mb-2">{tr("welcomeBack")}</p>}
                 <CardTitle className="text-2xl">{section.domain_name}</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="font-medium">Let&apos;s explore how this feels for you.</p>
+              <p className="font-medium">{tr("explore")}</p>
               {section.description && <p className="text-muted-foreground">{section.description}</p>}
               <p className="text-sm text-muted-foreground">
-                {section.count} {section.count === 1 ? "question" : "questions"} · about {estimateMinutes(section.count)}{" "}
-                min. There are no right or wrong answers: choose what fits best most of the time.
+                {tr(section.count === 1 ? "areaInfoOne" : "areaInfo", { n: section.count, min: estimateMinutes(section.count) })}
               </p>
               <Button
                 onClick={() => setIntroducedSections((prev) => new Set(prev).add(sectionIdx))}
                 className="w-full sm:w-auto"
               >
-                Begin this area
+                {tr("beginArea")}
                 <ArrowRight className="h-4 w-4 ml-2" aria-hidden="true" />
               </Button>
             </CardContent>
@@ -342,9 +354,16 @@ export function AssessmentQuestions({
                   <div className="flex items-center justify-between">
                     <Badge variant="outline">{currentQuestion.subdomain || section.domain_name}</Badge>
                   </div>
-                  <CardTitle id={`question-heading-${currentQuestion.id}`} className="text-[1.15em] leading-relaxed mt-2">
+                  <CardTitle
+                    id={`question-heading-${currentQuestion.id}`}
+                    lang={language !== "en" && currentQuestion.translated === false ? "en" : undefined}
+                    className="text-[1.15em] leading-relaxed mt-2"
+                  >
                     {currentQuestion.question_text}
                   </CardTitle>
+                  {language !== "en" && currentQuestion.translated === false && (
+                    <p className="mt-2 text-sm text-muted-foreground">{tr("inEnglish")}</p>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
@@ -359,7 +378,7 @@ export function AssessmentQuestions({
                     <div key={index} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
                       <RadioGroupItem value={option} id={`option-${index}`} />
                       <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-[1em]">
-                        {option}
+                        {optionLabel(language, option)}
                       </Label>
                     </div>
                   ))}
@@ -380,21 +399,21 @@ export function AssessmentQuestions({
             <div className="flex items-center justify-between">
               <Button variant="outline" onClick={handlePrevious} disabled={isFirstQuestion}>
                 <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
-                Previous
+                {tr("previous")}
               </Button>
               <Button onClick={handleNext} disabled={!responses[currentQuestion.id] || isCompleting}>
                 {isLastQuestion ? (
                   isCompleting ? (
-                    "Completing…"
+                    tr("completing")
                   ) : (
                     <>
                       <CheckCircle className="h-4 w-4 mr-2" aria-hidden="true" />
-                      Finish
+                      {tr("finish")}
                     </>
                   )
                 ) : (
                   <>
-                    Next
+                    {tr("next")}
                     <ArrowRight className="h-4 w-4 ml-2" aria-hidden="true" />
                   </>
                 )}
@@ -411,7 +430,7 @@ export function AssessmentQuestions({
         )}
 
         <p className="mt-10 text-xs text-muted-foreground">
-          This is structured screening and referral support. It does not provide a diagnosis.
+          {tr("notDiagnosis")}
         </p>
       </main>
     </div>

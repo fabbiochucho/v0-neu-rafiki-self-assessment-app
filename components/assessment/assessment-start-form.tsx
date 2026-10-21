@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { offeredScreeningLanguages, type ScreeningLanguage } from "@/lib/assessment/screening-i18n"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
@@ -49,6 +50,8 @@ export function AssessmentStartForm({ userProfiles, domains, questionCounts }: A
   const [guardianRelationship, setGuardianRelationship] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [language, setLanguage] = useState<ScreeningLanguage>("en")
+  const languages = offeredScreeningLanguages()
 
   const router = useRouter()
   const supabase = createClient()
@@ -129,6 +132,8 @@ export function AssessmentStartForm({ userProfiles, domains, questionCounts }: A
           assessment_type: assessmentType,
           domains: domains.filter((d) => selectedDomains.includes(d.id)).map((d) => d.name),
           respondent_type: respondentType,
+          // Only sent when not English, so this works before migration 026 is applied.
+          ...(language !== "en" && { language }),
           status: "in_progress",
         })
         .select()
@@ -188,6 +193,28 @@ export function AssessmentStartForm({ userProfiles, domains, questionCounts }: A
             </SelectContent>
           </Select>
         </div>
+
+        {/* Language of the questions: only reviewed languages are offered (lib/assessment/screening-i18n.ts). */}
+        {languages.length > 1 && (
+          <div className="space-y-2">
+            <Label htmlFor="screening-language">Language of the questions</Label>
+            <Select value={language} onValueChange={(v) => setLanguage(v as ScreeningLanguage)}>
+              <SelectTrigger id="screening-language">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {languages.map((l) => (
+                  <SelectItem key={l.code} value={l.code} lang={l.code}>
+                    {l.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Answers are scored the same way in every language. Questions not yet translated are shown in English.
+            </p>
+          </div>
+        )}
 
         {/* Assessment Type */}
         <div className="space-y-3">
