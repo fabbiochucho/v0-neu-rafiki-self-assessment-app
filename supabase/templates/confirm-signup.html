@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Confirm your email for NeuRafiki</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f5f4;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;">
+<!-- Supabase Auth "Confirm signup" template for NeuRafiki (Go template variables: ConfirmationURL, Email, Data.full_name). -->
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">One click to confirm your email and start your free self-assessment.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f4;">
+  <tr><td align="center" style="padding:24px 12px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;">
+      <tr><td style="height:6px;line-height:6px;font-size:0;background:#171717;">&nbsp;</td></tr>
+      <tr><td style="padding:24px 32px 8px 32px;font-size:22px;font-weight:800;color:#171717;letter-spacing:0.3px;">NeuRafiki<span style="display:block;font-size:12px;font-weight:500;color:#6b7280;letter-spacing:0;">becomechange.institute</span></td></tr>
+      <tr><td style="padding:16px 32px 8px 32px;">
+        <h1 style="margin:0 0 12px 0;font-size:26px;line-height:1.25;color:#111827;">Welcome{{ if .Data.full_name }}, {{ .Data.full_name }}{{ end }}! Confirm your email to get started.</h1>
+        <p style="margin:0 0 20px 0;font-size:16px;line-height:1.55;color:#374151;">Thanks for joining NeuRafiki, a free neurodivergent self-assessment platform made for African communities. Confirm your email to activate your account and save your results.</p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 12px 0;"><tr>
+          <td style="border-radius:8px;background:#171717;"><a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 28px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:8px;">Confirm my email</a></td>
+        </tr></table>
+        <p style="margin:0 0 4px 0;font-size:13px;line-height:1.5;color:#6b7280;">The button works once. If it doesn't, copy this link into your browser:</p>
+        <p style="margin:0 0 8px 0;font-size:12px;line-height:1.5;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#404040;">{{ .ConfirmationURL }}</a></p>
+      </td></tr>
+      <tr><td style="padding:20px 32px 4px 32px;"><h2 style="margin:0 0 12px 0;font-size:18px;color:#111827;">What you'll find on NeuRafiki</h2></td></tr>
+      <tr><td style="padding:0 24px 8px 24px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr><td width="50%" valign="top" style="padding:8px;"><div style="border:1px solid #e4e4e7;border-radius:10px;padding:14px;"><p style="margin:0 0 4px 0;font-size:15px;font-weight:700;color:#171717;">Take a free self-assessment</p><p style="margin:0 0 8px 0;font-size:13px;line-height:1.5;color:#4b5563;">Answer questions at your own pace and get a private summary of your results.</p><a href="https://neurafiki.becomechange.institute/assessment" style="font-size:13px;color:#404040;font-weight:600;">Start an assessment &rarr;</a></div></td><td width="50%" valign="top" style="padding:8px;"><div style="border:1px solid #e4e4e7;border-radius:10px;padding:14px;"><p style="margin:0 0 4px 0;font-size:15px;font-weight:700;color:#171717;">Read the blog</p><p style="margin:0 0 8px 0;font-size:13px;line-height:1.5;color:#4b5563;">Plain-language articles on neurodiversity, support and everyday life.</p><a href="https://neurafiki.becomechange.institute/blog" style="font-size:13px;color:#404040;font-weight:600;">Read articles &rarr;</a></div></td></tr>
+          <tr><td width="50%" valign="top" style="padding:8px;"><div style="border:1px solid #e4e4e7;border-radius:10px;padding:14px;"><p style="margin:0 0 4px 0;font-size:15px;font-weight:700;color:#171717;">Common questions</p><p style="margin:0 0 8px 0;font-size:13px;line-height:1.5;color:#4b5563;">What the assessments cover, how your data is handled, and what to do next.</p><a href="https://neurafiki.becomechange.institute/faq" style="font-size:13px;color:#404040;font-weight:600;">Read the FAQ &rarr;</a></div></td><td width="50%" valign="top" style="padding:8px;"><div style="border:1px solid #e4e4e7;border-radius:10px;padding:14px;"><p style="margin:0 0 4px 0;font-size:15px;font-weight:700;color:#171717;">Contact us</p><p style="margin:0 0 8px 0;font-size:13px;line-height:1.5;color:#4b5563;">Questions about NeuRafiki? Get in touch with our team.</p><a href="https://neurafiki.becomechange.institute/contact" style="font-size:13px;color:#404040;font-weight:600;">Contact the team &rarr;</a></div></td></tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:12px 32px 24px 32px;">
+        <div style="background:#f4f4f5;border-radius:10px;padding:16px;">
+          <p style="margin:0 0 6px 0;font-size:15px;font-weight:700;color:#111827;">Good to know</p>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:#374151;">NeuRafiki is a screening tool, not a diagnosis. If your results raise questions, talk to a qualified professional.</p>
+        </div>
+      </td></tr>
+      <tr><td style="background:#1f2937;padding:20px 32px;">
+        <p style="margin:0 0 6px 0;font-size:12px;line-height:1.5;color:#d1d5db;">You're receiving this because {{ .Email }} was used to sign up at neurafiki.becomechange.institute. If that wasn't you, ignore this email: nothing happens unless the email is confirmed.</p>
+        <p style="margin:0;font-size:12px;line-height:1.5;color:#9ca3af;">NeuRafiki by DiBadili Institute &middot; P.O. Box 2550, Festac Town, Lagos, Nigeria &middot;
+          <a href="https://neurafiki.becomechange.institute/privacy" style="color:#e5e7eb;">Privacy</a></p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>
