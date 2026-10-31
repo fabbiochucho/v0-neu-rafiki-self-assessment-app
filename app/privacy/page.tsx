@@ -97,6 +97,20 @@ export default function PrivacyPage() {
           ),
         },
         {
+          id: "newsletter",
+          heading: "Newsletter",
+          body: (
+            <p>
+              If you choose to subscribe, we use your name and email address to send our newsletter about NeuRafiki
+              and DiBadili Institute programmes and services, including new services we are developing and news and offers from our partners. Subscribing is
+              a separate choice: the box is never ticked for you and you don&apos;t need it to use NeuRafiki. We send it
+              only to adult account holders, never to children, and we keep a record of when you subscribed and the
+              wording you agreed to. Every newsletter has an unsubscribe link, and you can also unsubscribe by emailing{" "}
+              {email}; we stop as soon as you do. We send the newsletter ourselves: we never sell your details, and we never give them to a partner or anyone else for their own marketing unless you separately agree.
+            </p>
+          ),
+        },
+        {
           id: "processors",
           heading: "Who helps us process data",
           body: (
