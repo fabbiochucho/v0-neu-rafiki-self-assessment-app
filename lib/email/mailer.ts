@@ -15,6 +15,7 @@ interface SendEmailInput {
   subject: string
   text: string
   html?: string
+  headers?: Record<string, string>
 }
 
 function isEmailConfigured(): boolean {
@@ -51,6 +52,7 @@ export async function sendEmail(input: SendEmailInput): Promise<{ sent: boolean 
     subject: input.subject,
     text: input.text,
     html: input.html,
+    headers: input.headers,
   })
 
   return { sent: true }

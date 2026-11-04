@@ -14,6 +14,8 @@ import { DeleteAccount } from "@/components/account/delete-account"
 import { OrganisationControls } from "@/components/account/organisation-controls"
 import { createServiceRoleClient } from "@/lib/supabase/service"
 import { otherMembers } from "@/lib/organizations"
+import { NEWSLETTER_CONSENT } from "@/lib/newsletter"
+import { NewsletterToggle } from "@/components/account/newsletter-toggle"
 
 function EntitlementList({ items }: { items: [string, boolean][] }) {
   return (
@@ -60,6 +62,20 @@ export default async function AccountPage() {
     )
   } catch {
     orgs = []
+  }
+  // newsletter_subscribers is service-role only (scripts/028); read just this person's row.
+  let newsletterOn = false
+  try {
+    const { data } = user.email
+      ? await createServiceRoleClient()
+          .from("newsletter_subscribers")
+          .select("unsubscribed_at")
+          .eq("email", user.email.toLowerCase())
+          .maybeSingle()
+      : { data: null }
+    newsletterOn = !!data && !data.unsubscribed_at
+  } catch {
+    newsletterOn = false
   }
 
   return (
@@ -160,6 +176,16 @@ export default async function AccountPage() {
             </CardContent>
           </Card>
         )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Newsletter</CardTitle>
+            <CardDescription>{NEWSLETTER_CONSENT}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <NewsletterToggle on={newsletterOn} />
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
