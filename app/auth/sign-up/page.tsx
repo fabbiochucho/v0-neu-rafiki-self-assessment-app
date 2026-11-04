@@ -26,6 +26,7 @@ import { useState } from "react";
 import { Heart } from "lucide-react"
 import { Turnstile, TURNSTILE_SITE_KEY } from "@/components/turnstile"
 import { LEGAL_UPDATED } from "@/lib/legal"
+import { NEWSLETTER_CONSENT } from "@/lib/newsletter"
 
 const CONSENT_VERSION = "1.0"
 
@@ -40,6 +41,8 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const [captchaKey, setCaptchaKey] = useState(0)
+  // Separate, optional consent: never ticked for the person.
+  const [newsletter, setNewsletter] = useState(false)
   const router = useRouter();
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -106,6 +109,12 @@ export default function SignUpPage() {
             // Which version of the terms and privacy policy this person agreed to.
             terms_version: LEGAL_UPDATED,
             terms_accepted_at: new Date().toISOString(),
+            // Subscribed only once the email is confirmed (scripts/028), with the wording shown here.
+            ...(newsletter && {
+              newsletter_opt_in: "true",
+              newsletter_consent_text: NEWSLETTER_CONSENT,
+              newsletter_consented_at: new Date().toISOString(),
+            }),
           },
         },
       });
@@ -258,6 +267,17 @@ export default function SignUpPage() {
                         Terms
                       </Link>
                       . This may include storing my child&apos;s assessment responses if I assess a child.
+                    </Label>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <Checkbox
+                      id="newsletter"
+                      checked={newsletter}
+                      onCheckedChange={(checked) => setNewsletter(checked === true)}
+                    />
+                    <Label htmlFor="newsletter" className="block min-w-0 text-sm font-normal leading-snug">
+                      {NEWSLETTER_CONSENT}
                     </Label>
                   </div>
 
