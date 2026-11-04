@@ -22,7 +22,7 @@ export function NewsletterComposer({ activeCount }: { activeCount: number }) {
     setBusy(mode)
     setStatus(null)
     try {
-      const res = await fetch("/api/newsletter/admin/send", {
+      const res = await fetch("/api/staff/newsletter/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ subject, body, mode, confirm }),

@@ -1,15 +1,15 @@
-import { notFound } from "next/navigation"
+import Link from "next/link"
 import { SiteHeader } from "@/components/site-header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { createServiceRoleClient } from "@/lib/supabase/service"
-import { getPlatformAdmin } from "@/lib/auth/platform-admins"
+import { requireStaff } from "@/lib/staff"
 import { NewsletterComposer } from "./composer"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: "Newsletter | NeuRafiki", robots: { index: false } }
 
 export default async function AdminNewsletterPage() {
-  if (!(await getPlatformAdmin())) notFound()
+  await requireStaff("newsletter.send")
 
   const service = createServiceRoleClient()
   const subscribers = () => service.from("newsletter_subscribers").select("id", { count: "exact", head: true })
@@ -28,6 +28,9 @@ export default async function AdminNewsletterPage() {
       <SiteHeader />
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8 max-w-4xl">
         <header className="space-y-2">
+          <Link href="/staff" className="text-sm text-primary underline">
+            Staff dashboard
+          </Link>
           <h1 className="text-3xl font-bold">Newsletter</h1>
           <p className="text-muted-foreground">
             Goes only to adults who ticked the newsletter box at sign-up (and confirmed their email) or turned it on in
@@ -52,7 +55,7 @@ export default async function AdminNewsletterPage() {
             <CardHeader className="pb-2">
               <CardDescription>Consent records</CardDescription>
               <CardTitle className="text-base pt-2">
-                <a href="/api/newsletter/admin/export" className="text-primary underline">
+                <a href="/api/staff/newsletter/export" className="text-primary underline">
                   Download CSV
                 </a>
               </CardTitle>

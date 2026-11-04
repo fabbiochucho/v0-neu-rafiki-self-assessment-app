@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { getPlatformAdmin } from "@/lib/auth/platform-admins"
+import { staffForApi } from "@/lib/staff"
+import { logAdminAction } from "@/lib/staff/audit"
 import { sendEmail } from "@/lib/email/mailer"
 import { createServiceRoleClient } from "@/lib/supabase/service"
 import { newsletterHtml, newsletterText, unsubscribeUrl } from "@/lib/newsletter"
@@ -18,8 +19,9 @@ const bodySchema = z.object({
 })
 
 export async function POST(request: Request) {
-  const admin = await getPlatformAdmin()
-  if (!admin) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  const staff = await staffForApi("newsletter.send")
+  if (staff instanceof NextResponse) return staff
+  const admin = staff.email
 
   const parsed = bodySchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: "Add a subject and some text." }, { status: 400 })
@@ -44,6 +46,7 @@ export async function POST(request: Request) {
     // The unsubscribe link in a test is a dummy token, so clicking it changes nothing.
     const { sent } = await send(admin, "00000000-0000-0000-0000-000000000000", `[Test] ${subject}`).catch(() => ({ sent: false }))
     if (!sent) return NextResponse.json({ error: "Test not sent: check the SMTP settings." }, { status: 502 })
+    await logAdminAction(staff, "newsletter.test", { type: "newsletter", after: { subject } })
     return NextResponse.json({ message: `Test sent to ${admin}.` })
   }
 
@@ -74,7 +77,12 @@ export async function POST(request: Request) {
     else failed++
   }
 
-  await service.from("newsletter_issues").insert({ subject, body, sent_by: admin, recipients: sent, failed })
+  const { data: issue } = await service
+    .from("newsletter_issues")
+    .insert({ subject, body, sent_by: admin, recipients: sent, failed })
+    .select("id")
+    .single()
+  await logAdminAction(staff, "newsletter.send", { type: "newsletter_issues", id: issue?.id ?? null, after: { subject, sent, failed } })
   return NextResponse.json({
     message: failed ? `Sent to ${sent}; ${failed} failed (see logs).` : `Sent to ${sent} subscriber${sent === 1 ? "" : "s"}.`,
   })
