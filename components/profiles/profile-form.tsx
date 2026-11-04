@@ -61,6 +61,13 @@ export function ProfileForm({ userId, existingProfile }: ProfileFormProps) {
   const supabase = createClient()
   const isEditing = !!existingProfile
 
+  // Date of birth: from 100 years ago up to today (local date, not UTC).
+  const now = new Date()
+  const ymd = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+  const today = ymd(now)
+  const hundredYearsAgo = ymd(new Date(now.getFullYear() - 100, now.getMonth(), now.getDate()))
+
   const calculateAge = (birthDate: string) => {
     const today = new Date()
     const birth = new Date(birthDate)
@@ -191,6 +198,8 @@ export function ProfileForm({ userId, existingProfile }: ProfileFormProps) {
                 <Input
                   id="date_of_birth"
                   type="date"
+                  min={hundredYearsAgo}
+                  max={today}
                   value={formData.date_of_birth || ""}
                   onChange={(e) => handleInputChange("date_of_birth", e.target.value)}
                 />
