@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { FEATURE_OFF_MESSAGE, isEnabled } from "@/lib/features"
 import { createServiceRoleClient } from "@/lib/supabase/service"
 import { isFederationEnabled } from "@/lib/federation/config"
 import { getActiveAllianceLink } from "@/lib/federation/authorize"
@@ -28,6 +29,7 @@ export async function POST(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+  if (!(await isEnabled("check_ins", { userId: user.id }))) return NextResponse.json({ error: FEATURE_OFF_MESSAGE }, { status: 503 })
 
   let body: Record<string, unknown>
   try {

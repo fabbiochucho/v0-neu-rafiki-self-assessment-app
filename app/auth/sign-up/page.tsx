@@ -27,6 +27,7 @@ import { Heart } from "lucide-react"
 import { Turnstile, TURNSTILE_SITE_KEY } from "@/components/turnstile"
 import { LEGAL_UPDATED } from "@/lib/legal"
 import { NEWSLETTER_CONSENT } from "@/lib/newsletter"
+import { isStrongPassword } from "@/lib/password"
 
 const CONSENT_VERSION = "1.0"
 
@@ -69,7 +70,7 @@ export default function SignUpPage() {
       return;
     }
 
-    if (password.length < 12 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*()_+\-=[\]{};'\:"|<>?,./`~]/.test(password)) {
+    if (!isStrongPassword(password)) {
       setError("Password must be at least 12 characters, with an uppercase letter, a lowercase letter, a number and a symbol");
       setIsLoading(false);
       return;

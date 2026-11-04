@@ -9,6 +9,11 @@ export const metadata = { title: "Staff | NeuRafiki", robots: { index: false } }
 
 // Platform staff panel. Separate from /admin, which is for organisation admins.
 const SECTIONS: { href: string; label: string; description: string; permission: Permission }[] = [
+  { href: "/staff/users", label: "Users", description: "Search accounts, support people, suspend or restore.", permission: "users.read" },
+  { href: "/staff/payments", label: "Payments", description: "Premium payments, failed attempts and refunds.", permission: "billing.read" },
+  { href: "/staff/content", label: "Blog, news and training", description: "Write and publish posts for /blog.", permission: "content.edit" },
+  { href: "/staff/features", label: "Feature switches", description: "Turn features on or off for everyone, a plan, an organisation or a person.", permission: "features.edit" },
+  { href: "/staff/health", label: "System health", description: "Set-up checks, activity and the review queue.", permission: "health.read" },
   { href: "/staff/newsletter", label: "Newsletter", description: "Write and send the opt-in newsletter.", permission: "newsletter.send" },
   { href: "/translations", label: "Translations", description: "Review screening translations (reviewer list).", permission: "translations.manage" },
   { href: "/staff/team", label: "Staff and roles", description: "Who can use this panel, and with which role.", permission: "staff.manage" },
