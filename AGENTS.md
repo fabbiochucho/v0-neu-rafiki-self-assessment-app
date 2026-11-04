@@ -3,6 +3,7 @@
 Read these before changing NeuRafiki.
 
 - **Data:** every table has RLS. A new table needs RLS on and policies that check ownership (`auth.uid()`), never just "signed in". Signed-out visitors have no grants (migration 025); grant `anon` explicitly only for content that is meant to be public.
+- **Staff panel (`/staff`, not the organisation `/admin`):** every staff page, server action and API route checks a permission from `lib/staff/permissions.ts` through `requireStaff` / `staffForAction` / `staffForApi` (`lib/staff.ts`: staff role, 2FA, 30-minute idle) and records changes with `logAdminAction`. The audit log is append-only. Staff may only *view* a user's account read-only; never act as them.
 - **Keys:** only `NEXT_PUBLIC_SUPABASE_ANON_KEY` and the Sentry DSN may reach the browser. The service role key, encryption key, payment, SMTP, AI, cron and federation secrets stay in server code; never put them in a `NEXT_PUBLIC_` variable.
 - **Screening data is health data, often about children.** Answers and results stay encrypted and are scored on the server. No ad pixels, session replay (Sentry Replay stays off) or third-party SDKs that capture what people type. Analytics gets page paths only (`components/analytics.tsx`).
 - **AI:** the companion needs consent, never receives answers or scores, and says it's an AI, not a person.

@@ -1,5 +1,5 @@
 // Opt-in newsletter (scripts/028). The privacy policy's "Newsletter" section describes it;
-// keep the two in step. Sending happens only from /newsletter/admin.
+// keep the two in step. Sending happens only from /staff/newsletter.
 import { COPYRIGHT_HOLDER } from "@/lib/legal"
 
 const DEFAULT_SITE_URL = "https://neurafiki.becomechange.institute"
@@ -27,7 +27,7 @@ const linkify = (escaped: string) =>
   escaped.replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)]/g, (u) => `<a href="${u}" style="color:#171717;">${u}</a>`)
 
 /**
- * The issue body is plain text written on /newsletter/admin: blank lines separate paragraphs,
+ * The issue body is plain text written on /staff/newsletter: blank lines separate paragraphs,
  * "## " starts a heading, lines starting "- " are a list, and web addresses become links.
  * Everything is escaped first, so a body can't inject markup.
  */
