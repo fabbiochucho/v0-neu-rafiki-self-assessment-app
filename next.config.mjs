@@ -13,6 +13,8 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
+  // Cover images on /staff/content are uploaded through a server action (5 MB cap in scripts/030).
+  experimental: { serverActions: { bodySizeLimit: "6mb" } },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }]
   },

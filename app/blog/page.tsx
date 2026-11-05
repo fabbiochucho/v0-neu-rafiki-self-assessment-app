@@ -1,59 +1,68 @@
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, Heart, BookOpen } from "lucide-react"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { SiteHeader } from "@/components/site-header"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CONTENT_KINDS, isContentKind } from "@/lib/content"
 
+// Posts written on /staff/content. Refreshed when staff publish, and every 5 minutes.
+export const revalidate = 300
 export const metadata = {
-  title: "Blog - NeuRafiki",
+  title: "Blog, news and training | NeuRafiki",
+  description: "Articles, news, training and announcements from NeuRafiki.",
 }
 
-/**
- * No CMS/database table backs blog posts yet -- this intentionally ships as
- * a real empty state rather than seeded placeholder articles. Publishing
- * fabricated health-related content under the NeuRafiki name would read as
- * real editorial/medical guidance, which is worse than an honest "nothing
- * here yet."
- */
-export default function BlogPage() {
+const date = (d: string | null) => (d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "")
+
+export default async function BlogPage(props: { searchParams: Promise<{ kind?: string }> }) {
+  const { kind } = await props.searchParams
+  // Plain anon client: RLS shows published posts only.
+  const supabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+  let q = supabase
+    .from("content_items")
+    .select("id, kind, slug, title, summary, cover_image_url, published_at")
+    .order("published_at", { ascending: false })
+    .limit(60)
+  if (isContentKind(kind)) q = q.eq("kind", kind)
+  const { data: posts } = await q
+
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-              <Heart className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold text-foreground">NeuRafiki</span>
-          </div>
-          <Link href="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-          </Link>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-10 max-w-2xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Blog</h1>
-          <p className="text-muted-foreground">Updates, research notes, and community stories from NeuRafiki.</p>
-        </div>
-
-        <Card>
-          <CardContent className="p-12 text-center">
-            <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No posts yet</h3>
-            <p className="text-muted-foreground mb-6">
-              We haven&apos;t published anything here yet. Check back soon, or reach out via our{" "}
-              <Link href="/contact" className="underline">
-                contact page
-              </Link>{" "}
-              with questions in the meantime.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <SiteHeader />
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
+        <header className="max-w-3xl space-y-3">
+          <h1 className="text-4xl font-bold">Blog, news and training</h1>
+          <p className="text-lg text-muted-foreground">From the NeuRafiki team.</p>
+        </header>
+        <nav aria-label="Filter posts" className="flex flex-wrap gap-2 text-sm">
+          <Link href="/blog" aria-current={!isContentKind(kind) ? "page" : undefined} className={`rounded-full px-4 py-1.5 ${!isContentKind(kind) ? "bg-primary text-primary-foreground" : "border"}`}>All</Link>
+          {Object.entries(CONTENT_KINDS).map(([v, l]) => (
+            <Link key={v} href={`/blog?kind=${v}`} aria-current={kind === v ? "page" : undefined} className={`rounded-full px-4 py-1.5 ${kind === v ? "bg-primary text-primary-foreground" : "border"}`}>{l}</Link>
+          ))}
+        </nav>
+        {!posts?.length ? (
+          <p className="text-muted-foreground">Nothing here yet.</p>
+        ) : (
+          <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {posts.map((p) => (
+              <li key={p.id}>
+                <Link href={`/blog/${p.slug}`} className="block h-full rounded-xl focus-visible:outline-2 focus-visible:outline-primary">
+                  <Card className="h-full overflow-hidden hover:border-primary">
+                    {p.cover_image_url && (
+                      // eslint-disable-next-line @next/next/no-img-element -- images are unoptimised site-wide
+                      <img src={p.cover_image_url} alt="" className="w-full aspect-[16/9] object-cover" loading="lazy" />
+                    )}
+                    <CardHeader>
+                      <p className="text-xs uppercase tracking-wide text-primary">{CONTENT_KINDS[p.kind as keyof typeof CONTENT_KINDS]} · {date(p.published_at)}</p>
+                      <CardTitle className="text-lg">{p.title}</CardTitle>
+                    </CardHeader>
+                    {p.summary && <CardContent className="text-sm text-muted-foreground">{p.summary}</CardContent>}
+                  </Card>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
     </div>
   )
 }

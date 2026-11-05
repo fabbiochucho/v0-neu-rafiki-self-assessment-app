@@ -144,6 +144,9 @@ function LoginForm() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
+                    <Link href="/auth/forgot-password" className="text-sm text-primary underline underline-offset-2">
+                      Forgot your password?
+                    </Link>
                   </div>
                   {error && (
                     <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createServiceRoleClient } from "@/lib/supabase/service"
+import { deleteAccountData } from "@/lib/account-deletion"
 
 // POST /api/account/delete { email } -- permanently deletes the caller's
 // account. The typed email must match. Deleting the auth user cascades
@@ -52,12 +53,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Other people's records can point at this user without cascading.
-    const { error: unassignError } = await service.from("profiles").update({ assigned_to: null }).eq("assigned_to", uid)
-    if (unassignError) throw unassignError
-
-    const { error: authError } = await service.auth.admin.deleteUser(uid)
-    if (authError) throw authError
+    await deleteAccountData(service, uid)
   } catch {
     console.error("account deletion failed")
     return NextResponse.json(

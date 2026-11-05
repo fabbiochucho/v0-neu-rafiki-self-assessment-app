@@ -1,6 +1,7 @@
 import { generate, type ChatTurn } from "@/lib/ai"
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { FEATURE_OFF_MESSAGE, isEnabled } from "@/lib/features"
 import { createServiceRoleClient } from "@/lib/supabase/service"
 import { getOwnedAssessment } from "@/lib/assessment/authorize"
 import { AI_DAILY_LIMIT, AI_MIN_INTERVAL_SECONDS, getPlan, isCompanionConfigured } from "@/lib/entitlements"
@@ -29,6 +30,7 @@ export async function POST(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+  if (!(await isEnabled("ai.companion", { userId: user.id }))) return NextResponse.json({ error: FEATURE_OFF_MESSAGE }, { status: 503 })
 
   let body: { mode?: unknown; messages?: unknown; assessment_id?: unknown; question_id?: unknown }
   try {

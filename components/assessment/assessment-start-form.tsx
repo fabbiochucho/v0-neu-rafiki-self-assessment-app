@@ -51,6 +51,14 @@ export function AssessmentStartForm({ userProfiles, domains, questionCounts }: A
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [language, setLanguage] = useState<ScreeningLanguage>("en")
+  // Staff can switch screenings off on /staff/features.
+  const [startOn, setStartOn] = useState(true)
+  useEffect(() => {
+    fetch("/api/features?keys=assessment.start")
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((f: { "assessment.start"?: boolean }) => setStartOn(f["assessment.start"] !== false))
+      .catch(() => {})
+  }, [])
   const languages = offeredScreeningLanguages()
 
   const router = useRouter()
@@ -102,6 +110,10 @@ export function AssessmentStartForm({ userProfiles, domains, questionCounts }: A
   }
 
   const handleStartAssessment = async () => {
+    if (!startOn) {
+      setError("Starting a screening is switched off at the moment. Please try again later.")
+      return
+    }
     if (!selectedProfile || !respondentType || selectedDomains.length === 0) {
       setError("Please fill in all required fields")
       return
@@ -363,11 +375,17 @@ export function AssessmentStartForm({ userProfiles, domains, questionCounts }: A
           </div>
         )}
 
+        {!startOn && (
+          <p role="status" className="text-sm text-muted-foreground">
+            Starting a screening is switched off at the moment. Please try again later.
+          </p>
+        )}
         <div className="pt-4">
           <Button
             onClick={handleStartAssessment}
             disabled={
               isLoading ||
+              !startOn ||
               !selectedProfile ||
               !respondentType ||
               selectedDomains.length === 0 ||
