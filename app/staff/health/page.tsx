@@ -9,6 +9,8 @@ import { logAdminAction } from "@/lib/staff/audit"
 import { suspendUser } from "@/lib/staff/user-actions"
 import { aiProvider } from "@/lib/ai"
 import vercel from "@/vercel.json"
+import { AskEvals } from "@/components/staff/ask-evals"
+import { canRunEvals } from "@/lib/ask/evals"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: "System health | NeuRafiki staff", robots: { index: false } }
@@ -41,6 +43,9 @@ async function review(formData: FormData) {
 }
 
 const set = (v: string | undefined) => Boolean(v && v.trim())
+
+// The AI test run (components/staff/ask-evals.tsx) can take a few minutes.
+export const maxDuration = 300
 
 export default async function HealthPage({ searchParams }: { searchParams: Promise<{ msg?: string }> }) {
   const staff = await requireStaff("health.read")
@@ -152,6 +157,7 @@ export default async function HealthPage({ searchParams }: { searchParams: Promi
           )}
         </CardContent>
       </Card>
+      <AskEvals canRun={canRunEvals(staff.role)} />
     </StaffPage>
   )
 }
