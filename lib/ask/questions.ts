@@ -64,3 +64,7 @@ export function expertSourceDraft(
     created_by_label: staff.email,
   }
 }
+
+/** Owner decision 2026-11-26: questions sent to a clinician are kept 3 months (92 days covers any 3 calendar months). */
+export const RETENTION_DAYS = 92
+export const retentionCutoff = (now = new Date()) => new Date(now.getTime() - RETENTION_DAYS * 86_400_000)

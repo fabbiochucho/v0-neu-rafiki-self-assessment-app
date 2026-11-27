@@ -3,14 +3,21 @@ import { isCronRequest } from "@/lib/cron-auth"
 import { createServiceRoleClient } from "@/lib/supabase/service"
 import { deleteAccountData, isOrganisationAdmin } from "@/lib/account-deletion"
 import { logAdminAction } from "@/lib/staff/audit"
+import { retentionCutoff } from "@/lib/ask/questions"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 300
 
-// Daily: permanently deletes accounts staff soft-deleted more than 30 days ago and didn't restore.
+// Daily: permanently deletes accounts staff soft-deleted more than 30 days ago and didn't restore,
+// and questions sent to a clinician that are older than 3 months (verified answers spec 3.3).
 export async function GET(request: Request) {
   if (!isCronRequest(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const db = createServiceRoleClient()
+  const { count: questionsDeleted, error: qErr } = await db
+    .from("kb_questions")
+    .delete({ count: "exact" })
+    .lt("created_at", retentionCutoff().toISOString())
+  if (qErr) console.error("Purge: kb_questions delete failed", qErr.message)
   const { data: due, error } = await db
     .from("account_admin_status")
     .select("user_id, deleted_at, deleted_reason, updated_by")
@@ -38,5 +45,5 @@ export async function GET(request: Request) {
       console.error("Purge failed for one account:", e)
     }
   }
-  return NextResponse.json({ due: due?.length ?? 0, purged })
+  return NextResponse.json({ due: due?.length ?? 0, purged, questionsDeleted: questionsDeleted ?? 0 })
 }

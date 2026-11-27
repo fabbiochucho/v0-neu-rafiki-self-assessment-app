@@ -34,3 +34,11 @@ describe("expertSourceDraft", () => {
     expect(row.body.startsWith("# What is masking?")).toBe(true)
   })
 })
+
+describe("retention", () => {
+  it("keeps questions about 3 months (owner decision 2026-11-26)", async () => {
+    const { RETENTION_DAYS, retentionCutoff } = await import("@/lib/ask/questions")
+    expect(RETENTION_DAYS).toBe(92)
+    expect(retentionCutoff(new Date("2026-12-31T00:00:00Z")).toISOString()).toBe("2026-09-30T00:00:00.000Z")
+  })
+})
