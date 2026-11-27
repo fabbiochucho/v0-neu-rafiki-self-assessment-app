@@ -17,3 +17,13 @@ describe("companionPath", () => {
     expect(FEATURES).toHaveProperty("ai.ask.handoff")
   })
 })
+
+describe("switches that must fail closed (final review)", () => {
+  it("ai.ask and ai.ask.handoff are off when their row is missing, e.g. code deployed before migration 031", async () => {
+    const { resolveFeature, FEATURE_DEFAULT_OFF } = await import("@/lib/features")
+    expect([...FEATURE_DEFAULT_OFF].sort()).toEqual(["ai.ask", "ai.ask.handoff"])
+    expect(resolveFeature(null, [], { userId: "u" }, false)).toBe(false)
+    // Every other switch keeps the existing rule: no row means on.
+    expect(resolveFeature(null, [], { userId: "u" })).toBe(true)
+  })
+})
