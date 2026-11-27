@@ -4,7 +4,9 @@ import { IDLE_MS, adminCookieFresh, signAdminCookie } from "@/lib/staff/session"
 
 describe("admin permissions", () => {
   it("gives super admins everything and nobody else staff management", () => {
-    for (const p of PERMISSIONS) expect(can("super_admin", p)).toBe(true)
+    // clinical.approve is for a named clinician only (verified answers spec)
+    for (const p of PERMISSIONS.filter((p) => p !== "clinical.approve")) expect(can("super_admin", p)).toBe(true)
+    expect(can("super_admin", "clinical.approve")).toBe(false)
     for (const r of STAFF_ROLES.filter((r) => r !== "super_admin")) expect(can(r, "staff.manage")).toBe(false)
   })
 
