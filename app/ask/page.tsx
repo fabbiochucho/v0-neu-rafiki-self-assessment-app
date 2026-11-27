@@ -5,6 +5,7 @@ import { isEnabled } from "@/lib/features"
 import { AskForm } from "@/components/ask/ask-form"
 import { deleteQuestionAction } from "@/app/ask/actions"
 import { Button } from "@/components/ui/button"
+import { SiteHeader } from "@/components/site-header"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: "Ask - NeuRafiki", robots: { index: false } }
@@ -38,6 +39,8 @@ export default async function AskPage() {
   }
 
   return (
+    <div className="min-h-screen bg-background">
+      <SiteHeader />
     <main id="main-content" className="mx-auto max-w-2xl space-y-6 px-4 py-8">
       <h1 className="text-2xl font-semibold">Ask NeuRafiki</h1>
       {!on ? (
@@ -82,5 +85,6 @@ export default async function AskPage() {
         </>
       )}
     </main>
+    </div>
   )
 }
