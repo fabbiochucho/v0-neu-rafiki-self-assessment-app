@@ -6,6 +6,9 @@ import { getPlan } from "@/lib/entitlements"
 
 export const FEATURES = {
   "ai.companion": "AI companion",
+  "ai.ask": "Approved answers (companion and /ask)",
+  "ai.companion.freeform": "Companion general reply when no approved answer",
+  "ai.ask.handoff": "Ask a clinician (needs a clinical reviewer)",
   "assessment.start": "Starting a screening",
   check_ins: "Check-ins",
 } as const

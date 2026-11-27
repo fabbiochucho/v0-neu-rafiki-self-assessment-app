@@ -57,6 +57,9 @@ export const EDITORIAL_LABEL =
   "Prepared by NeuRafiki from public health agency guidance (WHO, CDC, NIH) and published research. Not yet reviewed by a clinician."
 export const DIAGNOSIS_POINTER =
   "This isn't a diagnosis. Only a qualified professional, after a full assessment, can diagnose a condition. Please see one if you have concerns."
+/** Shown before a question is sent to a clinician (client and server). */
+export const CONSENT_TEXT =
+  "Save this question so a NeuRafiki clinician can answer it. Don't include names or other details that identify anyone. It's deleted after 3 months, or sooner if you delete it."
 export const REFUSED_REPLY = "I can't help with that here. I can explain the screening, the questions, or your results."
 
 /** What to say when there's no approved answer. Hand-off stays off until a clinician joins (spec section 7). */
