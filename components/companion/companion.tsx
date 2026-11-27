@@ -197,7 +197,7 @@ export function Companion({ mode, assessmentId, questionId, onReturn }: Props) {
           </form>
           <p className="text-xs text-muted-foreground">
             You&apos;re chatting with an AI, not a person. Its explanation isn&apos;t part of your results. It can&apos;t see or change your scores, and it doesn&apos;t give a
-            diagnosis. Conversations aren&apos;t saved unless you choose to send a question to a clinician. Built with Llama.
+            diagnosis. Conversations aren&apos;t saved unless you choose to send a question to a clinician.
           </p>
         </div>
       )}

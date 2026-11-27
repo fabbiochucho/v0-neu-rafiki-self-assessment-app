@@ -13,7 +13,7 @@ export type AiProviderId = "cloudflare" | "anthropic"
 // Shown on the consent screen, so families know who processes what is sent.
 export const PROVIDERS: Record<AiProviderId, { recipient: string; storage: string }> = {
   cloudflare: {
-    recipient: "Cloudflare, which runs the open AI model (Meta's Llama) behind the companion",
+    recipient: "Cloudflare, which runs the open AI model (Google's Gemma) behind the companion",
     storage:
       "NeuRafiki doesn't save your conversations. Cloudflare processes each message to produce a reply and says it doesn't use customer content to train AI models.",
   },
@@ -23,10 +23,10 @@ export const PROVIDERS: Record<AiProviderId, { recipient: string; storage: strin
   },
 }
 
-// Owner decision: the smaller Llama 3.1 8B model by default, so the free
-// daily allowance lasts much longer in real use. CLOUDFLARE_AI_MODEL can
-// switch to a larger model (e.g. @cf/meta/llama-3.3-70b-instruct-fp8-fast).
-export const DEFAULT_CLOUDFLARE_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8"
+// Owner decision (2026-11-27): Gemma 4 26B A4B (Apache 2.0, 4B active, so it
+// stays cheap) after Cloudflare retired Llama 3.1 8B fp8 on 2026-11-20 and
+// every call returned 410. CLOUDFLARE_AI_MODEL overrides it.
+export const DEFAULT_CLOUDFLARE_MODEL = "@cf/google/gemma-4-26b-a4b-it"
 export const DEFAULT_ANTHROPIC_MODEL = "claude-haiku-5-5"
 
 export function aiProvider(env: Record<string, string | undefined> = process.env): AiProviderId | null {
@@ -50,9 +50,9 @@ export function cloudflareText(body: unknown): string | null {
   const result = (body as { result?: unknown })?.result as
     | { response?: unknown; choices?: { message?: { content?: unknown } }[] }
     | undefined
-  if (typeof result?.response === "string") return result.response
-  const content = result?.choices?.[0]?.message?.content
-  return typeof content === "string" ? content : null
+  const content = typeof result?.response === "string" ? result.response : result?.choices?.[0]?.message?.content
+  // Gemma 4 can prefix its answer with a (possibly empty) thought block.
+  return typeof content === "string" ? content.replace(/^\s*<\|channel>thought[\s\S]*?<channel\|>/, "") : null
 }
 
 export async function generate(opts: {
