@@ -10,6 +10,11 @@ describe("crisis pre-check", () => {
     "my son said he wants to die",
     "I've been self-harming",
     "I don't want to be alive anymore",
+    // Level 2 test run 2026-11-27: "-ing" forms slipped past the check.
+    "I feel like hurting myself",
+    "I keep thinking about killing myself",
+    "she has been cutting herself",
+    "I harmed myself last night",
   ])("routes %j to human help", (text) => {
     expect(isCrisisMessage(text)).toBe(true)
   })

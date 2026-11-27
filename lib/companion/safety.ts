@@ -9,7 +9,7 @@
 //    autistic", "you have ADHD") with careful wording.
 
 const CRISIS_PATTERNS: RegExp[] = [
-  /\b(kill|hurt|harm|cut)\s+(myself|herself|himself|themselves|my ?self)\b/i,
+  /\b(kill|hurt|harm|cut)(s|ing|ed|ting)?\s+(myself|herself|himself|themselves|my ?self)\b/i,
   /\bsuicid(e|al)\b/i,
   /\b(end|take)\s+(my|his|her|their)\s+(own\s+)?life\b/i,
   /\bwant(s|ed)?\s+to\s+die\b/i,
