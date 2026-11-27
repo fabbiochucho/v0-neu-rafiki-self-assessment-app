@@ -12,6 +12,8 @@ const SECTIONS: { href: string; label: string; description: string; permission: 
   { href: "/staff/users", label: "Users", description: "Search accounts, support people, suspend or restore.", permission: "users.read" },
   { href: "/staff/payments", label: "Payments", description: "Premium payments, failed attempts and refunds.", permission: "billing.read" },
   { href: "/staff/content", label: "Blog, news and training", description: "Write and publish posts for /blog.", permission: "content.edit" },
+  { href: "/staff/knowledge", label: "Approved sources", description: "Sources the AI may answer from, and their approval.", permission: "knowledge.edit" },
+  { href: "/staff/questions", label: "Questions for a clinician", description: "Answer questions the AI couldn't (once a clinician joins).", permission: "clinical.approve" },
   { href: "/staff/features", label: "Feature switches", description: "Turn features on or off for everyone, a plan, an organisation or a person.", permission: "features.edit" },
   { href: "/staff/health", label: "System health", description: "Set-up checks, activity and the review queue.", permission: "health.read" },
   { href: "/staff/newsletter", label: "Newsletter", description: "Write and send the opt-in newsletter.", permission: "newsletter.send" },

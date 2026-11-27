@@ -7,13 +7,20 @@ import { getOwnedAssessment } from "@/lib/assessment/authorize"
 import { AI_DAILY_LIMIT, AI_MIN_INTERVAL_SECONDS, getPlan, isCompanionConfigured } from "@/lib/entitlements"
 import { CRISIS_REPLY, DIAGNOSTIC_FALLBACK, containsDiagnosticClaim, isCrisisMessage } from "@/lib/companion/safety"
 import { systemPromptFor, type CompanionMode } from "@/lib/companion/prompts"
+import { companionPath } from "@/lib/companion/path"
+import { respond } from "@/lib/ask/respond"
+import { isLang } from "@/lib/ask/core"
+import { askSettings } from "@/lib/ask/settings"
 
 const MAX_TURNS = 12
 const MAX_USER_CHARS = 1000
 const MAX_ASSISTANT_CHARS = 4000
 
 /**
- * POST: one companion turn. Body: { mode, messages, assessment_id?, question_id? }.
+ * POST: one companion turn. Body: { mode, messages, assessment_id?, question_id?, language? }.
+ *
+ * With ai.ask on (and outside "during" mode) the reply comes from approved sources first, through
+ * lib/ask/respond.ts; with it off the companion behaves exactly as before.
  *
  * Nothing about the conversation is stored: the client holds the history,
  * and the server only increments a per-day counter. In "during" mode the
@@ -32,7 +39,7 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
   if (!(await isEnabled("ai.companion", { userId: user.id }))) return NextResponse.json({ error: FEATURE_OFF_MESSAGE }, { status: 503 })
 
-  let body: { mode?: unknown; messages?: unknown; assessment_id?: unknown; question_id?: unknown }
+  let body: { mode?: unknown; messages?: unknown; assessment_id?: unknown; question_id?: unknown; language?: unknown }
   try {
     body = await request.json()
   } catch {
@@ -64,7 +71,7 @@ export async function POST(request: NextRequest) {
   // Crisis pre-check BEFORE any model call or usage counting.
   const latest = messages[messages.length - 1].content as string
   if (isCrisisMessage(latest)) {
-    return NextResponse.json({ reply: CRISIS_REPLY, crisis: true })
+    return NextResponse.json({ reply: CRISIS_REPLY, crisis: true, kind: "crisis", citations: [], canEscalate: false })
   }
 
   let context: string | undefined
@@ -125,20 +132,41 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Please wait a moment before sending another message." }, { status: 429 })
   }
 
+  const busy = () =>
+    NextResponse.json({ error: "The companion is busy or has reached today's limit. Please try again later." }, { status: 503 })
+  const path = companionPath(mode, await isEnabled("ai.ask", { userId: user.id, plan }))
+  if (path === "verified") {
+    const language = isLang(body.language) ? body.language : "en"
+    const freeformOn = await isEnabled("ai.companion.freeform", { userId: user.id, plan })
+    const r = await respond(latest, language, {
+      context,
+      freeform: freeformOn ? { system: systemPromptFor(mode, context), messages } : null,
+      ...(await askSettings({ userId: user.id, plan })),
+    })
+    if (r.kind === "unavailable") {
+      return r.reason === "busy" ? busy() : NextResponse.json({ error: "The companion is unavailable right now" }, { status: 502 })
+    }
+    return NextResponse.json({ reply: r.text, kind: r.kind, citations: r.citations, canEscalate: r.canEscalate })
+  }
+
+  const kind = path === "clarify" ? "clarify" : "legacy"
   const result = await generate({ system: systemPromptFor(mode, context), messages, maxTokens: 1024 })
   if (!result.ok) {
     if (result.reason === "refused") {
-      return NextResponse.json({ reply: "I can't help with that here. I can explain the screening, the questions, or your results." })
+      return NextResponse.json({
+        reply: "I can't help with that here. I can explain the screening, the questions, or your results.",
+        kind,
+        citations: [],
+        canEscalate: false,
+      })
     }
-    if (result.reason === "busy") {
-      // Includes the free daily AI allowance running out; it resets at midnight UTC.
-      return NextResponse.json({ error: "The companion is busy or has reached today's limit. Please try again later." }, { status: 503 })
-    }
+    // Includes the free daily AI allowance running out; it resets at midnight UTC.
+    if (result.reason === "busy") return busy()
     return NextResponse.json({ error: "The companion is unavailable right now" }, { status: 502 })
   }
   const text = result.text
   // Open models are more likely to slip into diagnostic language; the same
   // check replaces any such reply.
   const reply = !text ? "Sorry, I don't have an answer for that." : containsDiagnosticClaim(text) ? DIAGNOSTIC_FALLBACK : text
-  return NextResponse.json({ reply })
+  return NextResponse.json({ reply, kind, citations: [], canEscalate: false })
 }

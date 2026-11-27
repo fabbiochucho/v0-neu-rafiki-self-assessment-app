@@ -4,10 +4,17 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import type { CompanionMode } from "@/lib/companion/prompts"
+import { labelFor, type Citation, type ReplyKind } from "@/lib/ask/core"
+import { AskClinician } from "@/components/ask/ask-clinician"
 
 interface Turn {
   role: "user" | "assistant"
   content: string
+  kind?: ReplyKind | "legacy"
+  citations?: Citation[]
+  canEscalate?: boolean
+  /** The user message this reply answers, for "Ask a clinician". */
+  question?: string
 }
 
 interface Props {
@@ -69,11 +76,19 @@ export function Companion({ mode, assessmentId, questionId, onReturn }: Props) {
       const res = await fetch("/api/companion", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, messages: next, assessment_id: assessmentId, question_id: questionId }),
+        body: JSON.stringify({
+          mode,
+          messages: next.map(({ role, content }) => ({ role, content })),
+          assessment_id: assessmentId,
+          question_id: questionId,
+        }),
       })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || "The companion is unavailable right now")
-      setTurns([...next, { role: "assistant", content: body.reply }])
+      setTurns([
+        ...next,
+        { role: "assistant", content: body.reply, kind: body.kind, citations: body.citations, canEscalate: body.canEscalate, question: text },
+      ])
     } catch (err) {
       setTurns(turns) // drop the unanswered message so history stays alternating
       setDraft(text)
@@ -108,7 +123,31 @@ export function Companion({ mode, assessmentId, questionId, onReturn }: Props) {
                 className={`rounded-lg p-3 text-sm whitespace-pre-wrap ${t.role === "user" ? "bg-muted ml-8" : "bg-primary/5 mr-8"}`}
               >
                 <span className="sr-only">{t.role === "user" ? "You said: " : "Companion said: "}</span>
+                {t.kind && t.kind !== "legacy" && t.kind !== "clarify" && labelFor({ kind: t.kind, citations: t.citations ?? [] }) && (
+                  <span className="mb-1 block text-xs font-medium text-muted-foreground">
+                    {labelFor({ kind: t.kind, citations: t.citations ?? [] })}
+                  </span>
+                )}
                 {t.content}
+                {!!t.citations?.length && (
+                  <span className="mt-2 block text-xs text-muted-foreground">
+                    <span className="block font-medium">Sources</span>
+                    {t.citations.map((c) => (
+                      <span key={c.n} className="block">
+                        [{c.n}]{" "}
+                        {c.url ? (
+                          <a href={c.url} className="underline" target="_blank" rel="noreferrer">
+                            {c.title}
+                          </a>
+                        ) : (
+                          c.title
+                        )}{" "}
+                        ({c.publisher})
+                      </span>
+                    ))}
+                  </span>
+                )}
+                {t.canEscalate && t.question && <AskClinician question={t.question} />}
               </li>
             ))}
           </ol>
@@ -158,7 +197,7 @@ export function Companion({ mode, assessmentId, questionId, onReturn }: Props) {
           </form>
           <p className="text-xs text-muted-foreground">
             You&apos;re chatting with an AI, not a person. Its explanation isn&apos;t part of your results. It can&apos;t see or change your scores, and it doesn&apos;t give a
-            diagnosis. Conversations aren&apos;t saved. Built with Llama.
+            diagnosis. Conversations aren&apos;t saved unless you choose to send a question to a clinician. Built with Llama.
           </p>
         </div>
       )}

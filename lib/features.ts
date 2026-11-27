@@ -6,10 +6,19 @@ import { getPlan } from "@/lib/entitlements"
 
 export const FEATURES = {
   "ai.companion": "AI companion",
+  "ai.ask": "Approved answers (companion and /ask)",
+  "ai.companion.freeform": "Companion general reply when no approved answer",
+  "ai.ask.handoff": "Ask a clinician (needs a clinical reviewer)",
   "assessment.start": "Starting a screening",
   check_ins: "Check-ins",
 } as const
 export type FeatureKey = keyof typeof FEATURES
+/**
+ * Switches that are OFF when they have no row or can't be read (fail closed): approved answers and the
+ * clinician hand-off must never switch on by accident, e.g. if code ships before migration 031 is applied.
+ */
+export const FEATURE_DEFAULT_OFF: ReadonlySet<FeatureKey> = new Set<FeatureKey>(["ai.ask", "ai.ask.handoff"])
+
 export const isFeatureKey = (k: unknown): k is FeatureKey => typeof k === "string" && k in FEATURES
 
 export interface FeatureControl {
@@ -39,8 +48,13 @@ export function bucket(key: string, userId: string): number {
   return h % 100
 }
 
-export function resolveFeature(control: FeatureControl | null, targets: FeatureTarget[], ctx: FeatureContext): boolean {
-  if (!control) return true
+export function resolveFeature(
+  control: FeatureControl | null,
+  targets: FeatureTarget[],
+  ctx: FeatureContext,
+  whenMissing = true,
+): boolean {
+  if (!control) return whenMissing
   if (control.killed) return false
   const pick = (scope: FeatureTarget["scope"], value?: string | null) =>
     value ? targets.find((t) => t.scope === scope && t.scope_value === value) : undefined
@@ -75,7 +89,7 @@ async function load(key: FeatureKey) {
   return entry
 }
 
-/** Is this feature on for this person? Fails open (on) if the switches can't be read. */
+/** Is this feature on for this person? Fails open (on) if the switches can't be read, except FEATURE_DEFAULT_OFF. */
 export async function isEnabled(key: FeatureKey, ctx: FeatureContext = {}): Promise<boolean> {
   try {
     const { control, targets } = await load(key)
@@ -91,10 +105,11 @@ export async function isEnabled(key: FeatureKey, ctx: FeatureContext = {}): Prom
         ctx = { ...ctx, plan: await getPlan(db, userId) }
       }
     }
-    return resolveFeature(control, targets, ctx)
+    return resolveFeature(control, targets, ctx, !FEATURE_DEFAULT_OFF.has(key))
   } catch {
-    console.error(`feature switch ${key} unreadable; treating as on`)
-    return true
+    const fallback = !FEATURE_DEFAULT_OFF.has(key)
+    console.error(`feature switch ${key} unreadable; treating as ${fallback ? "on" : "off"}`)
+    return fallback
   }
 }
 

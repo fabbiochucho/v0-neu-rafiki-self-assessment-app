@@ -73,14 +73,25 @@ export default function PrivacyPage() {
         },
         {
           id: "ai",
-          heading: "The AI companion",
+          heading: "The AI companion and Ask",
           body: (
-            <p>
-              The companion is optional and asks for your consent before first use. It receives the message you type
-              and, during a screening, the wording of the current question and its answer options. It never receives
-              your answers. It runs on Cloudflare Workers AI, using Meta&apos;s open Llama model (Built with Llama). We don&apos;t save your
-              conversations.
-            </p>
+            <>
+              <p>
+                The companion and the Ask page are optional, and the companion asks for your consent before first use. They
+                receive the message you type and, during a screening, the wording of the current question and its answer
+                options. They never receive your answers. They run on Cloudflare Workers AI, using Meta&apos;s open Llama model
+                (Built with Llama) and the BGE-M3 model to find matching passages. Answers come from sources NeuRafiki has
+                checked and approved, such as public health agency guidance and published research, and the sources are
+                listed. Answers say when no clinician has reviewed a source yet. When there isn&apos;t an approved answer, the
+                companion may give general information, clearly labelled as such. Neither gives a diagnosis.
+              </p>
+              <p>
+                We don&apos;t save your conversations. If you choose to send a question to a NeuRafiki clinician, we save that
+                one question, linked to your account, so the clinician can answer it. We delete it after 3 months, and you
+                can delete it sooner on your Ask page. When it&apos;s answered we email you a link, not the question or the
+                answer.
+              </p>
+            </>
           ),
         },
         {
@@ -126,7 +137,7 @@ export default function PrivacyPage() {
                   <strong>Flutterwave:</strong> payments.
                 </li>
                 <li>
-                  <strong>Cloudflare:</strong> the AI companion, only as described above, and the Turnstile
+                  <strong>Cloudflare:</strong> the AI companion and Ask, only as described above, and the Turnstile
                   security check on sign-up and sign-in.
                 </li>
                 <li>
