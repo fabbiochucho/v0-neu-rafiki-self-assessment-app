@@ -21,3 +21,16 @@ describe("validateEscalation", () => {
     })
   })
 })
+
+describe("expertSourceDraft", () => {
+  it("is a draft owned by the answering clinician, so someone else must approve it", async () => {
+    const { expertSourceDraft } = await import("@/lib/ask/questions")
+    const row = expertSourceDraft(
+      { id: "0b5c7e2a-1111-2222-3333-444455556666", question: "What is masking?", language: "en" },
+      "Masking means hiding traits. ".repeat(3),
+      { userId: "u1", email: "c@x.org" },
+    )
+    expect(row).toMatchObject({ status: "draft", origin: "expert_answer", created_by: "u1", publisher: "NeuRafiki clinician", key: "expert-0b5c7e2a" })
+    expect(row.body.startsWith("# What is masking?")).toBe(true)
+  })
+})

@@ -43,3 +43,24 @@ export async function escalateQuestion(
   }
   return { ok: true }
 }
+
+/** An expert answer saved as a draft source: someone other than the answering clinician must approve it. */
+export function expertSourceDraft(
+  q: { id: string; question: string; language: string },
+  answer: string,
+  staff: { userId: string; email: string },
+) {
+  return {
+    key: `expert-${q.id.slice(0, 8)}`,
+    title: q.question.slice(0, 300),
+    publisher: "NeuRafiki clinician",
+    url: null,
+    licence: "NeuRafiki original",
+    language: q.language,
+    origin: "expert_answer" as const,
+    body: `# ${q.question.slice(0, 280)}\n\n${answer}`,
+    status: "draft" as const,
+    created_by: staff.userId,
+    created_by_label: staff.email,
+  }
+}
