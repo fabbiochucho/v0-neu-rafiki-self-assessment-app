@@ -14,6 +14,15 @@ describe("AI provider", () => {
     expect(cloudflareText({ success: false })).toBeNull()
   })
 
+  it("drops Gemma 4's empty or filled thought block before the answer", () => {
+    expect(cloudflareText({ result: { choices: [{ message: { content: "<|channel>thought\n<channel|>Hi" } }] } })).toBe("Hi")
+    expect(cloudflareText({ result: { response: "<|channel>thought\nsome reasoning<channel|>Hello" } })).toBe("Hello")
+  })
+
+  it("defaults to a model Cloudflare still serves (Llama 3.1 8B fp8 was retired 2026-11-20)", () => {
+    expect(DEFAULT_CLOUDFLARE_MODEL).toBe("@cf/google/gemma-4-26b-a4b-it")
+  })
+
   it("calls the configured Cloudflare model with the system prompt first", async () => {
     const calls: { url: string; body: { messages: { role: string }[] } }[] = []
     const realFetch = globalThis.fetch

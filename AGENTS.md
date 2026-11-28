@@ -12,7 +12,7 @@ Read these before changing NeuRafiki.
 - **New vendor, script, SDK or font:** update the DPA register (`neurafiki/DPA_REGISTER.md` in the private repo `fabbiochucho/neurodiversity-private`), the processors list in `app/privacy/page.tsx` and the CSP in `lib/csp.ts` in the same PR, and bump `LEGAL_UPDATED`. Fonts stay self-hosted through `next/font`.
 - **Accessibility:** build to WCAG 2.2 AA (see `/accessibility`).
 - **Packages:** check every new package exists and is the one you meant before adding it. Commit the lockfile.
-- **AI model licence:** the default model is Meta Llama, whose licence requires "Built with Llama" to be shown. It appears in the chat notice and the privacy policy's AI section; change both if the model or provider changes.
+- **AI model licence:** the default model is Google Gemma 4 (Apache 2.0, no end-user notice needed). The consent screen (`PROVIDERS` in `lib/ai.ts`) and the privacy policy's AI section name it; change both if the model or provider changes. A Llama model would need "Built with Llama" shown again.
 - **Legal text:** the DPO clause in `lib/dpo.ts` is verbatim and test-guarded; don't edit it.
 - **Payments:** a plan is paid per month and never renews automatically. Don't add wording that says it does.
 - **Screening translations:** questions are shown in French or Portuguese only from reviewed rows in `question_translations` (approved on `/translations` by `TRANSLATION_REVIEWER_EMAILS`). Never machine-translate straight into reviewed rows, and keep answer values in English: scoring depends on them. A language is offered on the start form only once it is in `SCREENING_UI_REVIEWED`.

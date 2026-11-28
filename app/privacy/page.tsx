@@ -79,8 +79,8 @@ export default function PrivacyPage() {
               <p>
                 The companion and the Ask page are optional, and the companion asks for your consent before first use. They
                 receive the message you type and, during a screening, the wording of the current question and its answer
-                options. They never receive your answers. They run on Cloudflare Workers AI, using Meta&apos;s open Llama model
-                (Built with Llama) and the BGE-M3 model to find matching passages. Answers come from sources NeuRafiki has
+                options. They never receive your answers. They run on Cloudflare Workers AI, using Google&apos;s open Gemma model
+                and the BGE-M3 model to find matching passages. Answers come from sources NeuRafiki has
                 checked and approved, such as public health agency guidance and published research, and the sources are
                 listed. Answers say when no clinician has reviewed a source yet. When there isn&apos;t an approved answer, the
                 companion may give general information, clearly labelled as such. Neither gives a diagnosis.
